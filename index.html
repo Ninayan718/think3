@@ -1,0 +1,976 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="先写三行">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="apple-touch-icon.png">
+<title>先写三行 · 思考训练</title>
+<style>:root {
+  --bg: #FCF9F4;
+  --surface: #FFFFFF;
+  --ink: #2E2A26;
+  --ink-2: #8A8178;
+  --line: #E9E2D7;
+  --accent: #B5652F;
+  --accent-2: #C0673A;
+  --accent-soft: #FFF4E3;
+  --danger: #C0552E;
+  --ok: #4F8A5B;
+  --radius: 14px;
+  --shadow: 0 1px 2px rgba(46,42,38,.05), 0 6px 20px rgba(46,42,38,.06);
+  --font: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: #F2ECE2;
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.6;
+}
+.app {
+  max-width: 480px;
+  margin: 0 auto;
+  background: var(--bg);
+  min-height: 100vh;
+  position: relative;
+  padding-bottom: 84px;
+  box-shadow: 0 0 40px rgba(46,42,38,.06);
+}
+
+/* 顶栏 */
+.topbar {
+  position: sticky; top: 0; z-index: 20;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  padding: 14px 18px 12px;
+  display: flex; align-items: baseline; gap: 8px;
+}
+.topbar h1 { font-size: 18px; font-weight: 600; margin: 0; color: var(--ink); letter-spacing: .5px; }
+.topbar .sub { font-size: 12px; color: var(--ink-2); }
+
+/* 通用容器 */
+.page { padding: 18px; }
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow);
+  margin-bottom: 14px;
+}
+.card h2 { margin: 0 0 10px; font-size: 16px; }
+.muted { color: var(--ink-2); font-size: 13px; }
+.tag {
+  display: inline-block; font-size: 12px; color: var(--accent-2);
+  background: var(--accent-soft); border-radius: 999px;
+  padding: 2px 10px; margin: 0 6px 6px 0;
+}
+
+/* 输入框 */
+textarea, input[type=text], input[type=url], input[type=password] {
+  width: 100%; border: 1px solid var(--line); border-radius: 10px;
+  padding: 11px 12px; font-family: var(--font); font-size: 15px;
+  color: var(--ink); background: #fff; resize: vertical; line-height: 1.6;
+}
+textarea:focus, input:focus { outline: none; border-color: var(--accent); }
+textarea { min-height: 84px; }
+.field-label { font-size: 13px; color: var(--ink-2); margin: 12px 0 6px; display: block; }
+
+/* 按钮 */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  border: none; border-radius: 11px; padding: 12px 16px;
+  font-family: var(--font); font-size: 15px; font-weight: 600;
+  cursor: pointer; width: 100%; transition: transform .05s ease, opacity .2s;
+}
+.btn:active { transform: scale(.985); }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-ghost { background: var(--accent-soft); color: var(--accent-2); }
+.btn-line { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+.btn-sm { width: auto; padding: 8px 13px; font-size: 13px; border-radius: 9px; }
+.btn[disabled] { opacity: .45; cursor: not-allowed; }
+.btn-row { display: flex; gap: 10px; margin-top: 14px; }
+
+/* 底部 tab */
+.tabbar {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 30;
+  display: flex; max-width: 480px; margin: 0 auto;
+  background: rgba(255,255,255,.94); backdrop-filter: blur(8px);
+  border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.tab {
+  flex: 1; border: none; background: none; cursor: pointer;
+  padding: 9px 0 8px; font-family: var(--font); font-size: 11px;
+  color: var(--ink-2); display: flex; flex-direction: column; align-items: center; gap: 3px;
+}
+.tab svg { width: 22px; height: 22px; }
+.tab.active { color: var(--accent); }
+.tab .badge {
+  position: absolute; top: 4px; right: 50%; transform: translateX(14px);
+  background: var(--danger); color: #fff; font-size: 10px; line-height: 1;
+  min-width: 16px; height: 16px; border-radius: 8px; padding: 0 4px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* 思考流程 */
+.q-block { margin-bottom: 14px; }
+.q-block .qn { font-size: 14px; color: var(--ink); margin-bottom: 6px; font-weight: 500; }
+.q-block .qn .num { color: var(--accent); font-weight: 600; margin-right: 6px; }
+.locked {
+  border: 1px dashed var(--line); border-radius: var(--radius);
+  padding: 22px 16px; text-align: center; color: var(--ink-2); background: #fff;
+}
+.locked b { color: var(--accent-2); }
+.reveal { animation: fade .25s ease; }
+@keyframes fade { from { opacity: 0; transform: translateY(4px);} to { opacity:1; transform: none;} }
+.pitfall { background: var(--accent-soft); border-radius: 10px; padding: 12px 13px; font-size: 14px; color: #6B4321; margin-top: 10px; }
+.pitfall .lbl { font-weight: 600; display: block; margin-bottom: 4px; color: var(--accent-2); }
+
+/* 挑刺区 */
+.tabs { display: flex; gap: 8px; margin: 14px 0 10px; }
+.tabs .tabbtn {
+  flex: 1; text-align: center; font-size: 13px; padding: 8px; border-radius: 9px;
+  border: 1px solid var(--line); background: #fff; color: var(--ink-2); cursor: pointer;
+}
+.tabs .tabbtn.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+.critique-out { font-size: 14px; line-height: 1.75; white-space: pre-wrap; }
+.critique-out .ci { display: block; padding: 8px 0; border-bottom: 1px dashed var(--line); }
+.critique-out .ci:last-child { border-bottom: none; }
+
+/* 列表 */
+.entry {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 14px 16px; margin-bottom: 12px; cursor: pointer; box-shadow: var(--shadow);
+}
+.entry .t { font-size: 15px; font-weight: 600; margin-bottom: 5px; }
+.entry .meta { font-size: 12px; color: var(--ink-2); }
+.entry .preview { font-size: 13px; color: var(--ink-2); margin-top: 8px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.search {
+  width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+  font-family: var(--font); font-size: 14px; margin-bottom: 12px;
+}
+.empty { text-align: center; color: var(--ink-2); padding: 40px 20px; font-size: 14px; }
+
+/* 详情 / 回看 */
+.detail-q { margin-bottom: 12px; }
+.detail-q .qn { font-size: 13px; color: var(--accent-2); font-weight: 600; }
+.detail-q .qa { font-size: 15px; white-space: pre-wrap; }
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; text-align: center; }
+.stat .v { font-size: 26px; font-weight: 600; color: var(--accent); }
+.stat .k { font-size: 12px; color: var(--ink-2); margin-top: 2px; }
+.row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.row:last-child { border-bottom: none; }
+.row .k { font-size: 14px; }
+.row input[type=text], .row input[type=url], .row input[type=password] { width: 60%; }
+.toggle { width: 48px; height: 28px; border-radius: 999px; background: var(--line); position: relative; cursor: pointer; transition: background .2s; flex: 0 0 auto; }
+.toggle.on { background: var(--accent); }
+.toggle .dot { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; transition: left .2s; }
+.toggle.on .dot { left: 23px; }
+.notice { font-size: 12px; color: var(--ink-2); margin-top: 8px; line-height: 1.6; }
+.danger-zone { margin-top: 8px; }
+.link { color: var(--accent); cursor: pointer; font-size: 14px; }
+.toast {
+  position: fixed; bottom: 96px; left: 50%; transform: translateX(-50%);
+  background: var(--ink); color: #fff; font-size: 13px; padding: 9px 16px;
+  border-radius: 999px; opacity: 0; pointer-events: none; transition: opacity .25s; z-index: 50;
+  max-width: 80%; text-align: center;
+}
+.toast.show { opacity: .95; }
+.spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: spin .8s linear infinite; vertical-align: -2px; }
+@keyframes spin { to { transform: rotate(360deg);} }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <h1>先写三行</h1>
+    <span class="sub">想清楚，再决定</span>
+  </div>
+  <div id="view"></div>
+</div>
+<div class="tabbar" id="tabbar"></div>
+<div class="toast" id="toast"></div>
+<script>const CARDS = [
+  {
+    id: 'fact',
+    title: '事实与解释分开',
+    scene: ['daily', 'work'],
+    hint: '把「发生了什么」和「我怎么理解它」分栏写',
+    questions: [
+      '实际发生了什么？只写别人也能看见、能验证的部分。',
+      '我对它加了什么解释、猜测或评价？',
+      '去掉解释后还剩什么？我此刻的情绪叫什么？'
+    ],
+    pitfall: '我们几乎总是把「我觉得他在针对我」当成事实记下来。分栏写，是清晰思考最便宜的第一步。',
+    example: '事实「会上他打断我两次」／解释「他不认可我」／情绪「有点恼」。落点从生闷气变成「去确认一下」。'
+  },
+  {
+    id: 'counter',
+    title: '给自己找一条反证',
+    scene: ['work', 'reading'],
+    hint: '主动去推翻自己，比再想十个理由有用',
+    questions: [
+      '我现在最相信的那个结论，一句话写出来。',
+      '如果我错了，最可能错在哪一步？',
+      '有什么具体证据能推翻它？我有没有真的去找过？'
+    ],
+    pitfall: '默认模式是收集支持自己的证据。写不出反证，通常不是因为不存在，而是因为没找。',
+    example: '「这个方案没人会用」→ 反证：上周有两个同事主动问过进度，说明需求至少存在。'
+  },
+  {
+    id: 'why',
+    title: '连问三次为什么',
+    scene: ['work', 'daily'],
+    hint: '不许重复上一层的词，落点要能动手',
+    questions: [
+      '为什么会这样？写第一层原因。',
+      '再问一次为什么（不要重复上一层的说法）。',
+      '第三次为什么。哪一层是我今天能动手改的？'
+    ],
+    pitfall: '追因容易停在「因为人性」「因为大环境」这种不可操作层。落点必须是一个具体动作。',
+    example: '「报告晚了」→「数据没齐」→「没人知道要找谁要」→ 可改的一层：先列一张数据负责人清单。'
+  },
+  {
+    id: 'boundary',
+    title: '这个结论的边界在哪',
+    scene: ['reading', 'work'],
+    hint: '「有道理」和「适合我」是两件事',
+    questions: [
+      '这个说法在什么条件下成立？',
+      '在什么条件下明显不成立？举一个具体反例。',
+      '我现在的情况更接近哪一边？凭什么这么判断？'
+    ],
+    pitfall: '看到一句漂亮话就默认普适，是读完就忘、或照搬踩坑的主要原因。',
+    example: '「快速试错」适用于改得动、代价低的产品；对不可逆的资金决策就不成立。'
+  },
+  {
+    id: 'decision',
+    title: '最坏结果与可逆性',
+    scene: ['work', 'daily'],
+    hint: '把「什么都不做」也算成一个选项',
+    questions: [
+      '我在纠结的到底是哪两个（或三个）选项？',
+      '每个选项最坏会怎样？我扛得住吗？这个决定可逆吗？',
+      '如果我什么都不做，三个月后会是什么样？'
+    ],
+    pitfall: '多数纠结不是怕选错，是没把「不动」当成一个有代价的选项来评估。',
+    example: '「要不要换工作」→ 不动的代价也要写：三个月后大概率还是同样的困扰。'
+  },
+  {
+    id: 'perspective',
+    title: '换三个人的眼睛',
+    scene: ['daily', 'reading'],
+    hint: '不是假装同意，是借眼睛找漏掉的信息',
+    questions: [
+      '一个跟我立场相反的人，会怎么描述这件事？',
+      '一个完全不懂这行的朋友，会问什么傻问题？',
+      '十年后回看，我会觉得哪部分其实不重要？'
+    ],
+    pitfall: '换视角常写成「对方也有道理」这种和稀泥。要写出他看得见、而你看不见的具体东西。',
+    example: '反方会说「你只算了成本，没算交接期内别人替你扛的活」。'
+  },
+  {
+    id: 'feynman',
+    title: '讲给一个外行听',
+    scene: ['reading', 'work'],
+    hint: '讲不顺的地方，就是没想懂的地方',
+    questions: [
+      '用大白话把它讲给一个不懂的人听，直接写下来。',
+      '哪一步你卡住了，或者只能用术语糊过去？',
+      '针对卡住的那一步，我到底缺的是什么信息？'
+    ],
+    pitfall: '把讲不清楚归因为「我表达不行」，会刚好错过真正没搞懂的那一块。',
+    example: '「这个模型会做归因」→ 讲不下去 → 缺的是「它凭什么判断哪个渠道算贡献」。'
+  },
+  {
+    id: 'omission',
+    title: '我省略了什么',
+    scene: ['work', 'reading'],
+    hint: '结论的可靠度取决于你没看的东西',
+    questions: [
+      '我得出这个结论，用了哪些信息？列出来。',
+      '我省略了、没查的是什么？当时为什么省略？',
+      '补上哪一条，最可能改变我的结论？'
+    ],
+    pitfall: '人评估自己的判断时，只看已经掌握的材料，容易高估把握。',
+    example: '「数据说明用户不喜欢」→ 省略了「只统计了流失用户，没看留下来的人」。'
+  },
+  {
+    id: 'split',
+    title: '把大问题拆成三个',
+    scene: ['work', 'daily'],
+    hint: '焦虑常来自把几个问题打包成一个',
+    questions: [
+      '把这件「好大好乱」的事，拆成 3 个能独立回答的小问题。',
+      '哪一个小问题今天就能有答案？答案是什么？',
+      '剩下两个，各自具体卡在哪？'
+    ],
+    pitfall: '拆开之后通常只有一个真的紧急，另外两个只是跟着一起吓人。',
+    example: '「项目要黄了」→ 拆成：钱够不够／人够不够／对方还要不要。可能只有第三个是真问题。'
+  },
+  {
+    id: 'emotion',
+    title: '情绪在说什么需求',
+    scene: ['daily'],
+    hint: '情绪有信息量，但它不给事实',
+    questions: [
+      '我现在具体的感受是什么？别只写「烦」。',
+      '触发它的具体瞬间是哪一刻？当时发生了什么？',
+      '我真正想要但没得到的是什么？我能直接说出口吗？'
+    ],
+    pitfall: '把情绪当成对事实的判断，会把「我需要被事先告知」误读成「他不尊重我」。',
+    example: '「被临时改需求很火」→ 真正想要的是「提前知道，好安排自己的节奏」。'
+  },
+  {
+    id: 'timescale',
+    title: '拉到三个时间尺度',
+    scene: ['daily', 'work'],
+    hint: '多数反复想的事，尺度比想象中短',
+    questions: [
+      '这件事 10 分钟后还重要吗？10 天后呢？10 个月后呢？',
+      '我现在投入的注意力，和它的真实尺度匹配吗？',
+      '如果不匹配，我把注意力挪到哪一件更值得的事上？'
+    ],
+    pitfall: '不是叫你别在意，而是先看清楚这份在意有没有被放大。',
+    example: '一条已读不回的消息：10 分钟很重，10 个月基本不存在。'
+  },
+  {
+    id: 'analogy',
+    title: '类比，然后找不同',
+    scene: ['reading', 'work'],
+    hint: '类比帮你起步，差异才决定能不能照搬',
+    questions: [
+      '这跟我熟悉的哪件事结构相像？像在哪？',
+      '两者最关键的不同点是什么？',
+      '因为那个不同点，我绝对不能照搬什么？'
+    ],
+    pitfall: '相似处最容易看见，也最容易骗人；真正决定成败的往往是那个被忽略的差异。',
+    example: '「做公众号像开店」像在都要客流，但内容不能像货架一样随时换品类。'
+  }
+];
+
+const SCENE_LABEL = { daily: '日常', work: '工作', reading: '阅读' };
+
+const CRITIQUE_SYSTEM = '你是一个严格的思考教练，说话直接、不客套。';
+
+const CRITIQUE_RULES = '规则（必须遵守）：\n1. 不要给答案，不要替他分析这件事本身，不要下结论，不要安慰或夸奖。\n2. 只做一件事：指出这三条思考里具体的漏洞、跳步、含糊处，每条配一个能逼他继续想下去的问题。\n3. 最多 4 条，每条不超过 45 字，直接、具体、不要套话。\n4. 如果他写得确实扎实，只指出还差的那个角度，不要凑数。\n5. 用中文，纯文本，每行一条，行首用「· 」。';
+
+const LOCAL_RULES = [
+  {
+    id: 'absolute',
+    test: (t) => /(总是|永远|一定|肯定|绝对|所有人都|大家都|从来|完全|必须|毫无疑问|肯定不)/.test(t),
+    hit: (t) => {
+      const m = t.match(/(总是|永远|一定|肯定|绝对|所有人都|大家都|从来|完全|必须|毫无疑问|肯定不)/);
+      return '用了绝对化的「' + (m ? m[0] : '一定') + '」。能举出一个例外吗？把范围缩小到具体哪一次、哪个人。';
+    }
+  },
+  {
+    id: 'nocounter',
+    test: (t) => !/(但是|不过|然而|也许|可能|未必|不确定|反过来|如果我错|反例|万一|说不定|除非)/.test(t),
+    hit: () => '三行里没有出现任何「可能不成立」的余地。补一句：我这个判断最可能错在哪？'
+  },
+  {
+    id: 'noexample',
+    test: (t) => !/(比如|例如|上次|那天|具体|当时|[0-9]|[０-９]|「|")/.test(t),
+    hit: () => '没看到一个具体场景或数字。加一个真实发生过的小例子，抽象的结论才站得住。'
+  },
+  {
+    id: 'short',
+    test: (t) => t.replace(/\s/g, '').length < 45,
+    hit: (t) => '三行加起来只有 ' + t.replace(/\s/g, '').length + ' 字，多半还停在直觉层。挑最有把握的那行，再问一次「凭什么」。'
+  },
+  {
+    id: 'noaction',
+    test: (t) => /(烦|焦虑|难受|生气|不爽|纠结|担心|火大|郁闷)/.test(t) && !/(下一步|我打算|我要|准备|试着|验证|去问|去查|先做|明天|今天)/.test(t),
+    hit: () => '感受写清了，但没写任何下一步。哪怕只写「先去确认一下」，也比停在情绪里强。'
+  },
+  {
+    id: 'external',
+    test: (t) => /(都怪|全是因为|别人|他们|环境|没办法|只能这样|不是我的问题)/.test(t) && !/(我可以|我能|我这部分|我负责|我自己)/.test(t),
+    hit: () => '归因几乎都在外部。这里面有没有一小块，是你能推得动的部分？'
+  },
+  {
+    id: 'leap',
+    test: (t) => /(所以|因此|可见|显然就是|说白了)/.test(t) && !/(因为|依据是|数据|上次|比如|例如|看到|统计)/.test(t),
+    hit: () => '这里直接跳到了结论，中间的依据被省略了。支撑它的到底是哪一件事？'
+  },
+  {
+    id: 'vague',
+    test: (t) => /(这个东西|那件事|不太好|有问题|挺重要|说不清|感觉上)/.test(t),
+    hit: () => '出现了含糊的指代。把「这个东西」「有问题」换成具体的人、事、数字，再读一遍。'
+  }
+];
+</script>
+<script>'use strict';
+
+/* ---------- 存储 ---------- */
+const DB_KEY = 'think3.v1';
+let state = load();
+
+function load() {
+  try {
+    const raw = localStorage.getItem(DB_KEY);
+    if (raw) {
+      const s = JSON.parse(raw);
+      if (!s.settings) s.settings = {};
+      if (!s.entries) s.entries = [];
+      s.draft = null;
+      return s;
+    }
+  } catch (e) {}
+  return {
+    entries: [],
+    settings: { reviewDays: 3, enableAI: false, apiBase: 'https://api.openai.com/v1', apiKey: '', model: 'gpt-4o-mini' },
+    draft: null
+  };
+}
+function save() {
+  try {
+    localStorage.setItem(DB_KEY, JSON.stringify(state));
+  } catch (e) {
+    toast('保存失败，记录可能没存上');
+  }
+}
+
+/* ---------- 工具 ---------- */
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function pad(n) { return n < 10 ? '0' + n : '' + n; }
+function fmtDate(ts) {
+  const d = new Date(ts);
+  return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+}
+function isToday(ts) {
+  const d = new Date(ts), n = new Date();
+  return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
+}
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => t.classList.remove('show'), 1900);
+}
+function pickCard(scene) {
+  let pool = CARDS;
+  if (scene) pool = CARDS.filter(c => c.scene.indexOf(scene) >= 0);
+  if (!pool.length) pool = CARDS;
+  const last = state.draft ? state.draft.cardId : null;
+  let c = pool[Math.floor(Math.random() * pool.length)];
+  if (pool.length > 1 && c.id === last) c = pool[(pool.indexOf(c) + 1) % pool.length];
+  return c;
+}
+
+/* ---------- 路由 ---------- */
+let curTab = 'today';
+function parseHash() {
+  const h = (location.hash || '').replace('#', '');
+  if (['today', 'library', 'review', 'me'].indexOf(h) >= 0) curTab = h;
+}
+function go(tab) {
+  curTab = tab;
+  history.replaceState(null, '', '#' + tab);
+  render();
+}
+window.addEventListener('hashchange', () => { parseHash(); render(); });
+
+/* ---------- 渲染分发 ---------- */
+function render() {
+  const v = document.getElementById('view');
+  if (curTab === 'today') v.innerHTML = renderToday();
+  else if (curTab === 'library') v.innerHTML = renderLibrary();
+  else if (curTab === 'review') v.innerHTML = renderReview();
+  else v.innerHTML = renderMe();
+  renderTabbar();
+  bind();
+}
+
+/* ---------- 顶栏进度（今日） ---------- */
+function progressCard() {
+  const todayCount = state.entries.filter(e => isToday(e.createdAt)).length;
+  const due = state.entries.filter(e => !e.review && e.reviewAt <= Date.now()).length;
+  return '<div class="card" style="margin-bottom:14px">' +
+    '<div class="stat-grid">' +
+    '<div class="stat"><div class="v">' + todayCount + '</div><div class="k">今日思考</div></div>' +
+    '<div class="stat"><div class="v">' + due + '</div><div class="k">待回看</div></div>' +
+    '</div></div>';
+}
+
+/* ---------- 今天 / 思考流程 ---------- */
+function renderToday() {
+  let h = progressCard();
+  const d = state.draft;
+  if (!d || d.step === 'input') {
+    const scene = d ? d.scene : '';
+    const topic = d ? esc(d.topic) : '';
+    h += '<div class="card">' +
+      '<h2>现在脑子里在想什么？</h2>' +
+      '<div class="muted" style="margin-bottom:10px">可以是一句困扰、一个决定、刚看到的一句话，或一件让你不爽的事。不用想清楚，先丢进来。</div>' +
+      '<textarea data-topic placeholder="比如：同事改了我方案没打招呼，我很烦">' + topic + '</textarea>' +
+      '<div class="field-label">顺手选个场景（不选就全随机）</div>' +
+      sceneChips(scene) +
+      '<div class="btn-row"><button class="btn btn-primary" data-act="draw">抽一张思维卡</button></div>' +
+      '</div>';
+    return h;
+  }
+  if (d.step === 'write') {
+    const card = CARDS.find(c => c.id === d.cardId);
+    h += '<div class="card">' +
+      '<div class="tag">' + card.scene.map(s => SCENE_LABEL[s]).join('</div><div class="tag">') + '</div>' +
+      '<h2 style="margin-top:6px">' + esc(card.title) + '</h2>' +
+      '<div class="muted" style="margin-bottom:6px">' + esc(card.hint) + '</div>';
+    card.questions.forEach((q, i) => {
+      h += '<div class="q-block"><div class="qn"><span class="num">' + (i + 1) + '.</span>' + esc(q) + '</div>' +
+        '<textarea data-a="' + i + '" placeholder="写下你的回答（这一行至少写 4 个字）">' + esc(d.answers[i] || '') + '</textarea></div>';
+    });
+    h += '<div class="btn-row">' +
+      '<button class="btn btn-line btn-sm" data-act="redraw">换一张</button>' +
+      '<button class="btn btn-primary" data-act="unlock">写完三行，解锁对照</button>' +
+      '</div></div>';
+    return h;
+  }
+  // reveal
+  const card = CARDS.find(c => c.id === d.cardId);
+  h += '<div class="card">' +
+    '<div class="tag">' + card.scene.map(s => SCENE_LABEL[s]).join('</div><div class="tag">') + '</div>' +
+    '<h2 style="margin-top:6px">' + esc(card.title) + '</h2>';
+  card.questions.forEach((q, i) => {
+    h += '<div class="detail-q"><div class="qn">' + (i + 1) + '. ' + esc(q) + '</div><div class="qa">' + esc(d.answers[i]) + '</div></div>';
+  });
+  h += '<div class="pitfall"><span class="lbl">常见盲区</span>' + esc(card.pitfall) + '</div>' +
+    '<div class="pitfall" style="background:#F3F6EF">' + esc(card.example) + '</div>';
+  h += renderCritique(d);
+  h += '<div class="btn-row">' +
+    '<button class="btn btn-line btn-sm" data-act="redraw">换一张重想</button>' +
+    '<button class="btn btn-primary" data-act="save">存进思考库</button>' +
+    '</div></div>';
+  return h;
+}
+
+function sceneChips(sel) {
+  const arr = ['daily', 'work', 'reading'];
+  let h = '<div style="display:flex;gap:8px;margin-bottom:12px">';
+  h += '<div class="tag ' + (sel === '' ? 'on' : '') + '" data-scene="" style="' + (sel === '' ? 'background:var(--accent);color:#fff' : '') + '">全部</div>';
+  arr.forEach(s => {
+    const on = sel === s;
+    h += '<div class="tag" data-scene="' + s + '" style="' + (on ? 'background:var(--accent);color:#fff' : '') + '">' + SCENE_LABEL[s] + '</div>';
+  });
+  return h + '</div>';
+}
+
+/* ---------- 挑刺区 ---------- */
+function renderCritique(d) {
+  const aiReady = state.settings.enableAI && state.settings.apiKey;
+  let h = '<div class="tabs">' +
+    '<div class="tabbtn on" data-ctab="local">本地挑刺</div>' +
+    '<div class="tabbtn" data-ctab="copy">复制指令</div>' +
+    '<div class="tabbtn ' + (aiReady ? '' : 'disabled') + '" data-ctab="ai">' + (aiReady ? 'AI 挑刺' : 'AI（未配置）') + '</div>' +
+    '</div>';
+  h += '<div id="critOut" class="critique-out">' + localCritiqueHTML(d) + '</div>';
+  if (!aiReady) {
+    h += '<div class="notice">AI 挑刺需要在「我的」里开启并填入自己的 API 信息（数据只存在你设备上）。也可直接点「复制指令」粘到任意 AI。</div>';
+  }
+  return h;
+}
+function localCritiqueHTML(d) {
+  const t = d.answers.filter(a => a && a.trim()).join('\n');
+  const hits = [];
+  LOCAL_RULES.forEach(r => { if (r.test(t)) hits.push(r.hit(t)); });
+  if (!hits.length) {
+    return '<span class="ci">三行都写得挺具体，没抓到明显漏洞。再逼自己一句：<b>如果事实证明我错了，最可能错在哪一步？</b></span>';
+  }
+  return hits.slice(0, 4).map(x => '<span class="ci">· ' + esc(x) + '</span>').join('');
+}
+function buildPrompt(d) {
+  const card = CARDS.find(c => c.id === d.cardId);
+  return '【思考教练挑刺任务】\n问题：' + d.topic + '\n思维卡：' + card.title + '\n他的三条思考：\n1) ' +
+    (d.answers[0] || '') + '\n2) ' + (d.answers[1] || '') + '\n3) ' + (d.answers[2] || '') +
+    '\n\n' + CRITIQUE_RULES;
+}
+
+/* ---------- 思考库 ---------- */
+function renderLibrary() {
+  let h = '<div class="page" style="padding:18px">';
+  if (!state.entries.length) {
+    return '<div class="empty">还没有记录。<br>去「今天」写下第一件想不通的事。</div>';
+  }
+  h += '<input class="search" data-search placeholder="搜索你的思考（关键词）">';
+  h += '<div id="libList">';
+  const q = (state._q || '').toLowerCase();
+  const list = state.entries.slice().sort((a, b) => b.createdAt - a.createdAt).filter(e => {
+    if (!q) return true;
+    const s = (e.topic + ' ' + e.answers.map(a => a.a).join(' ') + ' ' + e.cardTitle).toLowerCase();
+    return s.indexOf(q) >= 0;
+  });
+  if (!list.length) h += '<div class="empty">没找到匹配的。</div>';
+  list.forEach(e => {
+    const preview = e.answers.map(a => a.a).join(' ');
+    h += '<div class="entry" data-act="open" data-id="' + e.id + '">' +
+      '<div class="t">' + esc(e.topic) + '</div>' +
+      '<div class="meta">' + fmtDate(e.createdAt) + ' · ' + esc(e.cardTitle) +
+      (e.review ? ' · 已回看' : (e.reviewAt <= Date.now() ? ' · <span style="color:var(--danger)">该回看了</span>' : '')) + '</div>' +
+      '<div class="preview">' + esc(preview) + '</div></div>';
+  });
+  h += '</div></div>';
+  return h;
+}
+
+/* ---------- 回看 ---------- */
+function renderReview() {
+  const due = state.entries.filter(e => !e.review && e.reviewAt <= Date.now()).sort((a, b) => a.reviewAt - b.reviewAt);
+  let h = '<div class="page" style="padding:18px">';
+  h += '<div class="muted" style="margin-bottom:12px">回看是这套工具真正起作用的地方：过几天回来，看自己当时的判断对不对。慢慢你就知道哪类想法靠谱、哪类常翻车。</div>';
+  if (!due.length) {
+    return h + '<div class="empty">暂时没有该回看的。<br>你存的思考会在 ' + state.settings.reviewDays + ' 天后出现在这里。</div>';
+  }
+  due.forEach(e => {
+    h += '<div class="entry" data-act="revopen" data-id="' + e.id + '">' +
+      '<div class="t">' + esc(e.topic) + '</div>' +
+      '<div class="meta">' + fmtDate(e.createdAt) + ' · ' + esc(e.cardTitle) + ' · 拖了 ' +
+      Math.max(0, Math.round((Date.now() - e.reviewAt) / 86400000)) + ' 天</div></div>';
+  });
+  return h + '</div>';
+}
+
+/* ---------- 我的 / 设置 ---------- */
+function renderMe() {
+  const s = state.settings;
+  const total = state.entries.length;
+  const covered = new Set(state.entries.map(e => e.cardId)).size;
+  const reviewed = state.entries.filter(e => e.review);
+  const hit = reviewed.filter(e => e.review.verdict === 'hit').length;
+  const miss = reviewed.filter(e => e.review.verdict === 'miss').length;
+  const rate = (hit + miss) ? Math.round(hit / (hit + miss) * 100) : null;
+  // 常踩坑 top3
+  const missByCard = {};
+  state.entries.forEach(e => { if (e.review && e.review.verdict === 'miss') missByCard[e.cardId] = (missByCard[e.cardId] || 0) + 1; });
+  const top = Object.keys(missByCard).map(id => ({ t: (CARDS.find(c => c.id === id) || {}).title, n: missByCard[id] }))
+    .sort((a, b) => b.n - a.n).slice(0, 3);
+
+  let h = '<div class="page" style="padding:18px">';
+  h += '<div class="card"><h2>你的数据</h2><div class="stat-grid">' +
+    '<div class="stat"><div class="v">' + total + '</div><div class="k">思考次数</div></div>' +
+    '<div class="stat"><div class="v">' + covered + '</div><div class="k">用过的卡片</div></div>' +
+    '<div class="stat"><div class="v">' + reviewed.length + '</div><div class="k">已回看</div></div>' +
+    '<div class="stat"><div class="v">' + (rate == null ? '—' : rate + '%') + '</div><div class="k">判断印证率</div></div>' +
+    '</div>';
+  if (top.length) {
+    h += '<div class="muted" style="margin-top:12px">最常打脸的卡片：' + top.map(x => esc(x.t) + '×' + x.n).join('、') + '</div>';
+  }
+  h += '</div>';
+
+  h += '<div class="card"><h2>设置</h2>';
+  h += '<div class="row"><span class="k">回看间隔</span><select data-set="reviewDays" style="border:1px solid var(--line);border-radius:8px;padding:7px;font-family:var(--font)">' +
+    [3, 7, 14].map(d => '<option value="' + d + '"' + (s.reviewDays == d ? ' selected' : '') + '>' + d + ' 天</option>').join('') + '</select></div>';
+  h += '<div class="row"><span class="k">开启 AI 挑刺</span><div class="toggle ' + (s.enableAI ? 'on' : '') + '" data-toggle="enableAI"><div class="dot"></div></div></div>';
+  h += '<div class="field-label">API 地址（OpenAI 兼容，如 DeepSeek：https://api.deepseek.com/v1）</div>' +
+    '<input type="text" data-set="apiBase" value="' + esc(s.apiBase) + '">';
+  h += '<div class="field-label">模型名</div><input type="text" data-set="model" value="' + esc(s.model) + '">';
+  h += '<div class="field-label">API Key（只存在你本机浏览器里）</div><input type="password" data-set="apiKey" value="' + esc(s.apiKey) + '">';
+  h += '<div class="notice">⚠️ Key 明文存在此设备 localStorage，别在公共电脑用；它只发往你填的服务，不会经过任何第三方。不想填就用「复制指令」。</div>';
+  h += '<div class="btn-row"><button class="btn btn-primary" data-act="saveSettings">保存设置</button></div>';
+  h += '</div>';
+
+  h += '<div class="card"><h2>数据</h2>' +
+    '<div class="btn-row">' +
+    '<button class="btn btn-line btn-sm" data-act="export">导出 JSON</button>' +
+    '<button class="btn btn-line btn-sm" data-act="import">导入 JSON</button>' +
+    '</div>' +
+    '<div class="danger-zone"><span class="link" data-act="clearData">清空所有数据</span></div>' +
+    '</div>';
+  h += '<div class="muted" style="text-align:center;margin-top:8px">数据只存在你这台设备。删了 App / 清缓存就找不回，记得偶尔导出。</div>';
+  h += '<input type="file" id="imp" accept="application/json" style="display:none">';
+  return h + '</div>';
+}
+
+/* ---------- 详情 / 回看编辑 ---------- */
+function detailHTML(e, mode) {
+  let h = '<div class="page" style="padding:18px">';
+  h += '<div class="card"><div class="tag">' + e.cardTitle + '</div>' +
+    '<h2 style="margin-top:6px">' + esc(e.topic) + '</h2>' +
+    '<div class="meta">' + fmtDate(e.createdAt) + '</div>';
+  e.answers.forEach((a, i) => {
+    const card = CARDS.find(c => c.id === e.cardId);
+    h += '<div class="detail-q"><div class="qn">' + (i + 1) + '. ' + esc(card.questions[i]) + '</div><div class="qa">' + esc(a.a) + '</div></div>';
+  });
+  h += '</div>';
+  if (e.critique) {
+    h += '<div class="card"><h2>当时的挑刺（' + (e.critType === 'ai' ? 'AI' : '本地') + '）</h2><div class="critique-out">' +
+      e.critique.split('\n').filter(x => x.trim()).map(x => '<span class="ci">' + esc(x) + '</span>').join('') + '</div></div>';
+  }
+  if (mode === 'review' && !e.review) {
+    h += '<div class="card"><h2>回看：后来怎么样了？</h2>';
+    h += '<div class="btn-row" style="flex-direction:column;gap:10px">' +
+      '<button class="btn btn-primary" data-act="revsave" data-id="' + e.id + '" data-v="hit">当时基本印证了</button>' +
+      '<button class="btn btn-primary" data-act="revsave" data-id="' + e.id + '" data-v="miss" style="background:var(--danger)">后来打脸了</button>' +
+      '<button class="btn btn-line" data-act="revsave" data-id="' + e.id + '" data-v="na">还说不好</button>' +
+      '</div>';
+    h += '<div class="field-label">当时我漏掉了什么？（选填）</div><textarea data-revnote placeholder="比如：没考虑到对方也有时间压力"></textarea>';
+    h += '</div>';
+  } else if (e.review) {
+    const label = e.review.verdict === 'hit' ? '基本印证' : (e.review.verdict === 'miss' ? '后来打脸' : '说不好');
+    h += '<div class="card"><h2>回看结论</h2><div class="meta">' + fmtDate(e.review.at) + ' · ' + label + '</div>' +
+      (e.review.note ? '<div class="qa" style="margin-top:8px">' + esc(e.review.note) + '</div>' : '') + '</div>';
+  }
+  h += '<div class="btn-row"><button class="btn btn-line" data-act="back">返回</button></div>';
+  return h + '</div>';
+}
+
+/* ---------- 底部 tab ---------- */
+function renderTabbar() {
+  const due = state.entries.filter(e => !e.review && e.reviewAt <= Date.now()).length;
+  const tabs = [
+    { id: 'today', label: '今天', icon: 'M12 3a9 9 0 100 18 9 9 0 000-18zm0 4v5l3 2' },
+    { id: 'library', label: '思考库', icon: 'M4 5h16M4 10h16M4 15h16M4 20h16' },
+    { id: 'review', label: '回看', icon: 'M3 12a9 9 0 109-9 9 9 0 00-7 3.5M3 4v3.5h3.5' },
+    { id: 'me', label: '我的', icon: 'M12 12a4 4 0 100-8 4 4 0 000 8zm-7 8a7 7 0 0114 0' }
+  ];
+  let h = '';
+  tabs.forEach(t => {
+    const on = curTab === t.id;
+    const badge = t.id === 'review' && due ? '<span class="badge">' + due + '</span>' : '';
+    h += '<button class="tab ' + (on ? 'active' : '') + '" data-act="go" data-tab="' + t.id + '">' + badge +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="' + t.icon + '"/></svg>' +
+      t.label + '</button>';
+  });
+  document.getElementById('tabbar').innerHTML = h;
+}
+
+/* ---------- 事件绑定 ---------- */
+function bind() {
+  const v = document.getElementById('view');
+  v.querySelectorAll('[data-act]').forEach(el => {
+    el.addEventListener('click', () => act(el.getAttribute('data-act'), el));
+  });
+  document.getElementById('tabbar').querySelectorAll('[data-act="go"]').forEach(el => {
+    el.addEventListener('click', () => go(el.getAttribute('data-tab')));
+  });
+  // 文本输入不触发重绘（避免丢焦点），只写回 state
+  v.querySelectorAll('[data-a]').forEach(el => {
+    el.addEventListener('input', () => { state.draft.answers[+el.getAttribute('data-a')] = el.value; });
+  });
+  const topic = v.querySelector('[data-topic]');
+  if (topic) topic.addEventListener('input', () => { if (state.draft) state.draft.topic = topic.value; else { state.draft = { topic: topic.value, scene: '', cardId: null, answers: ['', '', ''], step: 'input' }; } });
+  v.querySelectorAll('[data-scene]').forEach(el => {
+    el.addEventListener('click', () => { const sc = el.getAttribute('data-scene'); if (state.draft) state.draft.scene = sc; else state.draft = { topic: '', scene: sc, cardId: null, answers: ['', '', ''], step: 'input' }; render(); });
+  });
+  const search = v.querySelector('[data-search]');
+  if (search) search.addEventListener('input', () => { state._q = search.value; const list = document.getElementById('libList'); if (list) list.outerHTML = libListInner(search.value); bind(); });
+  v.querySelectorAll('[data-ctab]').forEach(el => {
+    el.addEventListener('click', () => switchCritTab(el.getAttribute('data-ctab')));
+  });
+  // 设置
+  v.querySelectorAll('[data-toggle]').forEach(el => {
+    el.addEventListener('click', () => { const k = el.getAttribute('data-toggle'); state.settings[k] = !state.settings[k]; render(); });
+  });
+  const set = v.querySelector('[data-set="reviewDays"]');
+  if (set) set.addEventListener('change', () => { state.settings.reviewDays = +set.value; });
+  ['apiBase', 'model', 'apiKey'].forEach(k => {
+    const el = v.querySelector('[data-set="' + k + '"]');
+    if (el) el.addEventListener('input', () => { state.settings[k] = el.value; });
+  });
+  const imp = document.getElementById('imp');
+  if (imp) imp.addEventListener('change', importFile);
+}
+
+function libListInner(q) {
+  q = (q || '').toLowerCase();
+  const list = state.entries.slice().sort((a, b) => b.createdAt - a.createdAt).filter(e => {
+    if (!q) return true;
+    return (e.topic + ' ' + e.answers.map(a => a.a).join(' ') + ' ' + e.cardTitle).toLowerCase().indexOf(q) >= 0;
+  });
+  if (!list.length) return '<div class="empty">没找到匹配的。</div>';
+  return list.map(e => '<div class="entry" data-act="open" data-id="' + e.id + '">' +
+    '<div class="t">' + esc(e.topic) + '</div>' +
+    '<div class="meta">' + fmtDate(e.createdAt) + ' · ' + esc(e.cardTitle) +
+    (e.review ? ' · 已回看' : (e.reviewAt <= Date.now() ? ' · <span style="color:var(--danger)">该回看了</span>' : '')) + '</div>' +
+    '<div class="preview">' + esc(e.answers.map(a => a.a).join(' ')) + '</div></div>').join('');
+}
+
+/* ---------- 行为分发 ---------- */
+function act(a, el) {
+  switch (a) {
+    case 'draw': {
+      const topic = (document.querySelector('[data-topic]') || {}).value || (state.draft ? state.draft.topic : '');
+      if (topic.trim().length < 4) { toast('先写一句话，至少 4 个字'); return; }
+      const scene = state.draft ? state.draft.scene : '';
+      const card = pickCard(scene);
+      state.draft = { topic: topic, scene: scene, cardId: card.id, answers: ['', '', ''], step: 'write' };
+      render();
+      break;
+    }
+    case 'redraw': {
+      const d = state.draft; if (!d) return;
+      const card = pickCard(d.scene);
+      state.draft = { topic: d.topic, scene: d.scene, cardId: card.id, answers: ['', '', ''], step: 'write' };
+      render();
+      break;
+    }
+    case 'unlock': {
+      const d = state.draft;
+      if (d.answers.filter(x => (x || '').trim().length >= 4).length < 3) { toast('三行都至少写 4 个字才能解锁'); return; }
+      d.step = 'reveal'; save(); render();
+      break;
+    }
+    case 'save': {
+      const d = state.draft; if (!d) return;
+      const card = CARDS.find(c => c.id === d.cardId);
+      const entry = {
+        id: uid(), createdAt: Date.now(), topic: d.topic, cardId: card.id, cardTitle: card.title,
+        answers: card.questions.map((q, i) => ({ q: q, a: d.answers[i] || '' })),
+        tags: card.scene.slice(), reviewAt: Date.now() + state.settings.reviewDays * 86400000,
+        review: null, critique: d.critique || null, critType: d.critType || null
+      };
+      state.entries.push(entry); state.draft = null; save();
+      toast('已存进思考库，' + state.settings.reviewDays + ' 天后回来回看');
+      go('today');
+      break;
+    }
+    case 'open': showDetail(el.getAttribute('data-id'), 'view'); break;
+    case 'revopen': showDetail(el.getAttribute('data-id'), 'review'); break;
+    case 'back': go(curTab === 'review' ? 'review' : 'library'); break;
+    case 'revsave': {
+      const id = el.getAttribute('data-id'); const v = el.getAttribute('data-v');
+      const e = state.entries.find(x => x.id === id); if (!e) return;
+      const noteEl = document.querySelector('[data-revnote]');
+      e.review = { at: Date.now(), verdict: v, note: noteEl ? noteEl.value.trim() : '' };
+      save(); toast('已记录回看'); renderReview(); renderTabbar();
+      curTab = 'review';
+      break;
+    }
+    case 'crit-copy': {
+      const text = buildPrompt(state.draft);
+      copyText(text);
+      break;
+    }
+    case 'crit-ai': doAICritique(); break;
+    case 'export': doExport(); break;
+    case 'import': document.getElementById('imp').click(); break;
+    case 'clearData': doClear(); break;
+    case 'saveSettings': save(); toast('设置已保存'); render(); break;
+  }
+}
+
+function showDetail(id, mode) {
+  const e = state.entries.find(x => x.id === id); if (!e) return;
+  curTab = mode === 'review' ? 'review' : 'library';
+  document.getElementById('view').innerHTML = detailHTML(e, mode);
+  renderTabbar(); bind();
+}
+
+/* ---------- 挑刺 tab 切换 ---------- */
+function switchCritTab(tab) {
+  document.querySelectorAll('[data-ctab]').forEach(el => el.classList.toggle('on', el.getAttribute('data-ctab') === tab));
+  const out = document.getElementById('critOut');
+  if (tab === 'local') out.innerHTML = localCritiqueHTML(state.draft);
+  else if (tab === 'copy') out.innerHTML = '<span class="ci">点下方按钮，把挑刺指令和你的三行一起复制到剪贴板，粘到任意 AI 即可。</span><div class="btn-row"><button class="btn btn-ghost" data-act="crit-copy">复制挑刺指令</button></div>';
+  else if (tab === 'ai') {
+    if (!state.settings.enableAI || !state.settings.apiKey) { out.innerHTML = '<span class="ci">还没配置 API，先去「我的」开启。</span>'; return; }
+    out.innerHTML = '<span class="ci">点下方按钮，用你自己的 API 直接挑刺（只挑刺，不给答案）。</span><div class="btn-row"><button class="btn btn-primary" data-act="crit-ai">请求 AI 挑刺</button></div>';
+  }
+  bind();
+}
+
+function copyText(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => toast('已复制，去任意 AI 粘上')).catch(() => fallbackCopy(text));
+  } else fallbackCopy(text);
+}
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); toast('已复制'); } catch (e) { toast('复制失败，请手动选取'); }
+  document.body.removeChild(ta);
+}
+
+/* ---------- AI 挑刺 ---------- */
+async function doAICritique() {
+  const d = state.draft; if (!d) return;
+  if (!state.settings.enableAI || !state.settings.apiKey) { toast('请先在「我的」配置 API'); return; }
+  const card = CARDS.find(c => c.id === d.cardId);
+  const userPrompt = buildPrompt(d);
+  const btn = document.querySelector('[data-act="crit-ai"]');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> 请求中'; }
+  try {
+    const base = state.settings.apiBase.replace(/\/+$/, '');
+    const resp = await fetch(base + '/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + state.settings.apiKey },
+      body: JSON.stringify({
+        model: state.settings.model || 'gpt-4o-mini',
+        temperature: 0.6,
+        messages: [
+          { role: 'system', content: CRITIQUE_SYSTEM },
+          { role: 'user', content: userPrompt }
+        ]
+      })
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    const txt = (data.choices && data.choices[0] && data.choices[0].message.content) || '';
+    const out = document.getElementById('critOut');
+    d.critique = txt; d.critType = 'ai';
+    out.innerHTML = txt.split('\n').filter(x => x.trim()).map(x => '<span class="ci">' + esc(x) + '</span>').join('');
+    save();
+    if (btn) { btn.disabled = false; btn.textContent = '重新请求'; }
+  } catch (e) {
+    if (btn) { btn.disabled = false; btn.textContent = '请求 AI 挑刺'; }
+    toast('请求失败：' + e.message + '（可改用复制指令）');
+  }
+}
+
+/* ---------- 导出 / 导入 / 清空 ---------- */
+function doExport() {
+  const blob = new Blob([JSON.stringify(state.entries, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'think3-export-' + new Date().toISOString().slice(0, 10) + '.json';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+function importFile(ev) {
+  const f = ev.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const arr = JSON.parse(r.result);
+      let added = 0;
+      arr.forEach(e => { if (e && e.id && !state.entries.some(x => x.id === e.id)) { state.entries.push(e); added++; } });
+      save(); toast('导入 ' + added + ' 条'); render();
+    } catch (err) { toast('解析失败，文件格式不对'); }
+  };
+  r.readAsText(f);
+}
+function doClear() {
+  if (confirm('确定清空全部思考记录？此操作不可恢复，建议先导出。')) {
+    state.entries = []; state.draft = null; save(); toast('已清空'); go('today');
+  }
+}
+
+/* ---------- 启动 ---------- */
+function seedDemo() {
+  const card = CARDS.find(c => c.id === 'fact');
+  state.draft = {
+    topic: '同事改了我方案没打招呼，我很烦', scene: 'work', cardId: card.id,
+    answers: ['会上他打断我两次', '他肯定是不认可我', '所以我干脆也别管细节了'],
+    step: 'reveal', critique: null, critType: null
+  };
+  curTab = 'today';
+}
+parseHash();
+if (location.hash === '#demo') seedDemo();
+render();
+</script>
+</body>
+</html>

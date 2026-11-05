@@ -187,179 +187,458 @@ textarea { min-height: 84px; }
 .toast.show { opacity: .95; }
 .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: spin .8s linear infinite; vertical-align: -2px; }
 @keyframes spin { to { transform: rotate(360deg);} }
+
+/* 长内容断行加固（URL、长英文串不撑破布局） */
+.muted, .notice, .field-label, .detail-q .qa, .pitfall, .q-block .qn, .entry .t { overflow-wrap: anywhere; }
+.tab { min-width: 0; }
+
+/* 匹配卡片 */
+.match-card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 14px; margin-bottom: 12px; box-shadow: var(--shadow);
+}
+.mc-head { display: flex; gap: 10px; align-items: flex-start; }
+.mc-emoji { font-size: 22px; line-height: 1.2; flex: 0 0 auto; }
+.mc-name { font-size: 15px; font-weight: 600; color: var(--ink); }
+.mc-one { font-size: 13px; color: var(--ink-2); margin-top: 2px; line-height: 1.5; }
+.chip {
+  display: inline-block; font-size: 11px; color: var(--accent-2);
+  background: var(--accent-soft); border-radius: 999px; padding: 1px 8px; margin: 2px 4px 0 0;
+}
+
+/* 知识库 */
+.cat-label {
+  font-size: 13px; font-weight: 600; color: var(--accent-2);
+  margin: 16px 0 8px; letter-spacing: .5px;
+}
+.cat-label:first-child { margin-top: 4px; }
+.kcard {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 13px 15px; margin-bottom: 10px; box-shadow: var(--shadow); cursor: pointer;
+}
+.kcard-head { display: flex; align-items: center; gap: 10px; }
+.k-emoji { font-size: 19px; flex: 0 0 auto; }
+.k-name { font-size: 15px; font-weight: 600; color: var(--ink); flex: 1; }
+.k-arrow { font-size: 12px; color: var(--ink-2); flex: 0 0 auto; }
+.k-body { margin-top: 12px; border-top: 1px dashed var(--line); padding-top: 12px; }
+.k-row { font-size: 14px; color: var(--ink); margin-bottom: 10px; line-height: 1.6; }
+.k-row:last-child { margin-bottom: 0; }
+.k-k {
+  display: inline-block; font-size: 12px; font-weight: 600; color: #fff;
+  background: var(--accent); border-radius: 6px; padding: 1px 8px; margin-right: 8px; margin-bottom: 3px;
+}
 </style>
 </head>
 <body>
 <div class="app">
   <div class="topbar">
     <h1>先写三行</h1>
-    <span class="sub">想清楚，再决定</span>
+    <span class="sub">匹配思维 · 练会思考</span>
   </div>
   <div id="view"></div>
 </div>
 <div class="tabbar" id="tabbar"></div>
 <div class="toast" id="toast"></div>
-<script>const CARDS = [
+<script>/* ============================================================
+ * 思维方式知识库 —— 每个方法都讲清「何时用 / 怎么用 / 误区 / 例子」
+ * signals：用户原话里出现这些词，就说明这个方法可能该用上（匹配器用）
+ * ============================================================ */
+const CATEGORIES = [
+  { id: 'see', label: '看清事实' },
+  { id: 'root', label: '追根问底' },
+  { id: 'decide', label: '做决定' },
+  { id: 'calib', label: '校准判断' },
+  { id: 'view', label: '换角度看' },
+  { id: 'feel', label: '情绪与需求' }
+];
+
+const METHODS = [
+  /* ---------- 看清事实 ---------- */
   {
     id: 'fact',
-    title: '事实与解释分开',
-    scene: ['daily', 'work'],
-    hint: '把「发生了什么」和「我怎么理解它」分栏写',
+    name: '事实与解释分开',
+    emoji: '🔍',
+    category: 'see',
+    scene: ['daily', 'work', 'reading'],
+    oneLiner: '把「发生了什么」和「我怎么理解它」分两栏写，滤镜就掉了。',
+    when: '当你对一件事有强烈感受，或脑子里一堆「他肯定……」「应该……」的时候。',
+    how: '拿一张纸分两栏：左栏只写别人也能看见、能验证的事实（时间、动作、原话）；右栏写你加进去的解释、猜测、评价。先别急着评判，把两者分开本身就是厘清的第一步。',
+    pitfall: '我们几乎总是把「我觉得他在针对我」当成事实记下来。混在一起，后面的所有推理都建立在想象上。',
+    example: '事实「会上他打断我两次」／解释「他不认可我」／情绪「有点恼」。分完栏，落点从生闷气变成「去确认一下」。',
     questions: [
       '实际发生了什么？只写别人也能看见、能验证的部分。',
       '我对它加了什么解释、猜测或评价？',
       '去掉解释后还剩什么？我此刻的情绪叫什么？'
     ],
-    pitfall: '我们几乎总是把「我觉得他在针对我」当成事实记下来。分栏写，是清晰思考最便宜的第一步。',
-    example: '事实「会上他打断我两次」／解释「他不认可我」／情绪「有点恼」。落点从生闷气变成「去确认一下」。'
+    signals: ['觉得', '应该', '是不是', '对不对', '以为', '针对我', '不爽', '烦', '感觉', '肯定']
   },
   {
-    id: 'counter',
-    title: '给自己找一条反证',
-    scene: ['work', 'reading'],
-    hint: '主动去推翻自己，比再想十个理由有用',
+    id: 'first',
+    name: '第一性原理',
+    emoji: '🧱',
+    category: 'see',
+    scene: ['work', 'reading', 'daily'],
+    oneLiner: '别急着类比和抄答案，拆到不可再分的基本事实，从底层重新拼。',
+    when: '当你问「这到底是怎么回事」「本质是什么」，或别人都在抄一种做法你却想不通为什么时。',
+    how: '连续追问「为什么一定是这样？」直到触到那条无法再拆、也无需证明的基本事实或常识。然后从这条地基往上，自己重新推导一遍，而不是沿用别人给的结论。',
+    pitfall: '把「大家都这么做」当成理由。第一性原理要的是底层依据，不是共识。',
+    example: '「要不要做付费社群？」拆到底：用户付费的本质是「为确定性结果买单」。那我提供的是确定性吗？没有就别抄别人的玩法。',
     questions: [
-      '我现在最相信的那个结论，一句话写出来。',
-      '如果我错了，最可能错在哪一步？',
-      '有什么具体证据能推翻它？我有没有真的去找过？'
+      '这件事最底层、不用证明的那个事实是什么？',
+      '现在大家的做法，是从这个事实推出来的吗？还是只是习惯？',
+      '如果抛开所有「别人都这样」，我自己会怎么从头设计？'
     ],
-    pitfall: '默认模式是收集支持自己的证据。写不出反证，通常不是因为不存在，而是因为没找。',
-    example: '「这个方案没人会用」→ 反证：上周有两个同事主动问过进度，说明需求至少存在。'
+    signals: ['本质', '到底', '根本', '底层', '究竟', '想不明白', '说不清本质', '底层逻辑']
   },
+  {
+    id: 'causal',
+    name: '相关不是因果',
+    emoji: '🔗',
+    category: 'see',
+    scene: ['work', 'reading'],
+    oneLiner: '两件事同时发生，不代表一个导致了另一个。先找第三变量。',
+    when: '当你说「因为 A 所以 B」「是不是 X 导致了 Y」，或看到一份「数据证明」的图表时。',
+    how: '问三个问题：A 和 B 真的同时变吗？有没有可能是同一个原因同时造成了两者（第三变量）？有没有可能是巧合或时间先后造成的错觉？结论写成「相关」而非「导致」。',
+    pitfall: '把时间先后当因果：「我吃完药就好了，所以药有用」——可能只是病自己好了。',
+    example: '「冰淇淋销量上升，溺水也上升」——不是冰淇淋害人，是夏天到了（第三变量）。',
+    questions: [
+      '我说的「导致」，证据是两件事一起发生，还是真排除了别的原因？',
+      '有没有一个「第三变量」同时造成了这两件事？',
+      '如果只对 A 动手，B 真的会变吗？我怎么验证？'
+    ],
+    signals: ['因为', '所以', '导致', '影响了', '关系', '关联', '都怪', '怪']
+  },
+
+  /* ---------- 追根问底 ---------- */
   {
     id: 'why',
-    title: '连问三次为什么',
+    name: '连问三次为什么',
+    emoji: '❓',
+    category: 'root',
     scene: ['work', 'daily'],
-    hint: '不许重复上一层的词，落点要能动手',
+    oneLiner: '一层层往下刨，落点必须是一个今天能动手改的具体动作。',
+    when: '当你说「为什么总是……」「搞不懂问题出在哪」，或事情反复出问题时。',
+    how: '对一个现象连问三次「为什么」。每一层的答案不能简单重复上一层（换个角度）。追到第三层，逼自己说出「哪一层是我今天能动手改的」。',
+    pitfall: '停在「因为人性」「因为大环境」这种不可操作层。追因的终点必须是个动作，否则只是抱怨。',
+    example: '「报告晚了」→「数据没齐」→「没人知道要找谁要」→ 可改的一层：先列一张数据负责人清单。',
     questions: [
       '为什么会这样？写第一层原因。',
       '再问一次为什么（不要重复上一层的说法）。',
       '第三次为什么。哪一层是我今天能动手改的？'
     ],
-    pitfall: '追因容易停在「因为人性」「因为大环境」这种不可操作层。落点必须是一个具体动作。',
-    example: '「报告晚了」→「数据没齐」→「没人知道要找谁要」→ 可改的一层：先列一张数据负责人清单。'
-  },
-  {
-    id: 'boundary',
-    title: '这个结论的边界在哪',
-    scene: ['reading', 'work'],
-    hint: '「有道理」和「适合我」是两件事',
-    questions: [
-      '这个说法在什么条件下成立？',
-      '在什么条件下明显不成立？举一个具体反例。',
-      '我现在的情况更接近哪一边？凭什么这么判断？'
-    ],
-    pitfall: '看到一句漂亮话就默认普适，是读完就忘、或照搬踩坑的主要原因。',
-    example: '「快速试错」适用于改得动、代价低的产品；对不可逆的资金决策就不成立。'
-  },
-  {
-    id: 'decision',
-    title: '最坏结果与可逆性',
-    scene: ['work', 'daily'],
-    hint: '把「什么都不做」也算成一个选项',
-    questions: [
-      '我在纠结的到底是哪两个（或三个）选项？',
-      '每个选项最坏会怎样？我扛得住吗？这个决定可逆吗？',
-      '如果我什么都不做，三个月后会是什么样？'
-    ],
-    pitfall: '多数纠结不是怕选错，是没把「不动」当成一个有代价的选项来评估。',
-    example: '「要不要换工作」→ 不动的代价也要写：三个月后大概率还是同样的困扰。'
-  },
-  {
-    id: 'perspective',
-    title: '换三个人的眼睛',
-    scene: ['daily', 'reading'],
-    hint: '不是假装同意，是借眼睛找漏掉的信息',
-    questions: [
-      '一个跟我立场相反的人，会怎么描述这件事？',
-      '一个完全不懂这行的朋友，会问什么傻问题？',
-      '十年后回看，我会觉得哪部分其实不重要？'
-    ],
-    pitfall: '换视角常写成「对方也有道理」这种和稀泥。要写出他看得见、而你看不见的具体东西。',
-    example: '反方会说「你只算了成本，没算交接期内别人替你扛的活」。'
-  },
-  {
-    id: 'feynman',
-    title: '讲给一个外行听',
-    scene: ['reading', 'work'],
-    hint: '讲不顺的地方，就是没想懂的地方',
-    questions: [
-      '用大白话把它讲给一个不懂的人听，直接写下来。',
-      '哪一步你卡住了，或者只能用术语糊过去？',
-      '针对卡住的那一步，我到底缺的是什么信息？'
-    ],
-    pitfall: '把讲不清楚归因为「我表达不行」，会刚好错过真正没搞懂的那一块。',
-    example: '「这个模型会做归因」→ 讲不下去 → 缺的是「它凭什么判断哪个渠道算贡献」。'
-  },
-  {
-    id: 'omission',
-    title: '我省略了什么',
-    scene: ['work', 'reading'],
-    hint: '结论的可靠度取决于你没看的东西',
-    questions: [
-      '我得出这个结论，用了哪些信息？列出来。',
-      '我省略了、没查的是什么？当时为什么省略？',
-      '补上哪一条，最可能改变我的结论？'
-    ],
-    pitfall: '人评估自己的判断时，只看已经掌握的材料，容易高估把握。',
-    example: '「数据说明用户不喜欢」→ 省略了「只统计了流失用户，没看留下来的人」。'
+    signals: ['为什么', '搞不懂', '问题出在哪', '总是', '老是', '到底为什么', '出问题', '反复']
   },
   {
     id: 'split',
-    title: '把大问题拆成三个',
+    name: '拆成三个小问题',
+    emoji: '🧩',
+    category: 'root',
     scene: ['work', 'daily'],
-    hint: '焦虑常来自把几个问题打包成一个',
+    oneLiner: '焦虑常来自把几个问题打包成一个「大事」。拆开就不可怕了。',
+    when: '当你觉得「这事好乱、太大、无从下手」，或脑子里一团麻的时候。',
+    how: '把这件「好大好乱」的事，硬拆成 3 个能各自独立回答的小问题。再判断：哪一个是今天就能有答案的？剩下两个各自卡在哪？通常只有一个真紧急。',
+    pitfall: '拆开之后通常只有一个真的紧急，另外两个只是跟着一起吓人。别被打包的恐惧带跑。',
+    example: '「项目要黄了」→ 拆成：钱够不够／人够不够／对方还要不要。可能只有第三个是真问题。',
     questions: [
       '把这件「好大好乱」的事，拆成 3 个能独立回答的小问题。',
       '哪一个小问题今天就能有答案？答案是什么？',
       '剩下两个，各自具体卡在哪？'
     ],
-    pitfall: '拆开之后通常只有一个真的紧急，另外两个只是跟着一起吓人。',
-    example: '「项目要黄了」→ 拆成：钱够不够／人够不够／对方还要不要。可能只有第三个是真问题。'
+    signals: ['好乱', '一团', '太大', '太多', '不知道从哪', '无从下手', '复杂', '乱']
   },
   {
-    id: 'emotion',
-    title: '情绪在说什么需求',
-    scene: ['daily'],
-    hint: '情绪有信息量，但它不给事实',
+    id: 'boundary',
+    name: '找边界条件',
+    emoji: '📏',
+    category: 'root',
+    scene: ['reading', 'work'],
+    oneLiner: '「有道理」和「适合我」是两件事。先问它在什么条件下不成立。',
+    when: '当你看到一句漂亮话想照搬，或问「这招适不适合我用」「别人行我也行吗」时。',
+    how: '对任何结论问：它在什么条件下成立？举一个明确不成立的具体反例。再对照自己：我现在的情况更接近哪一边？凭什么这么判断？',
+    pitfall: '看到一句漂亮话就默认普适，是读完就忘、或照搬踩坑的主要原因。',
+    example: '「快速试错」适用于改得动、代价低的产品；对不可逆的资金决策就不成立。',
     questions: [
-      '我现在具体的感受是什么？别只写「烦」。',
-      '触发它的具体瞬间是哪一刻？当时发生了什么？',
-      '我真正想要但没得到的是什么？我能直接说出口吗？'
+      '这个说法在什么条件下成立？',
+      '在什么条件下明显不成立？举一个具体反例。',
+      '我现在的情况更接近哪一边？凭什么这么判断？'
     ],
-    pitfall: '把情绪当成对事实的判断，会把「我需要被事先告知」误读成「他不尊重我」。',
-    example: '「被临时改需求很火」→ 真正想要的是「提前知道，好安排自己的节奏」。'
+    signals: ['适不适合', '适用', '都这样', '普遍', '通用', '照搬', '别人行', '能不能用', '适合我']
+  },
+
+  /* ---------- 做决定 ---------- */
+  {
+    id: 'decision',
+    name: '最坏结果与可逆性',
+    emoji: '⚖️',
+    category: 'decide',
+    scene: ['work', 'daily'],
+    oneLiner: '把「什么都不做」也当成一个选项一起比，很多纠结就散了。',
+    when: '当你纠结「要不要」「该不该」「选哪个」，在两个选项间犹豫时。',
+    how: '列出你纠结的 2-3 个选项。对每个问：最坏会怎样？我扛得住吗？这个决定可逆吗？最后务必把「什么都不做」也写成一个选项，评估它三个月后的代价。',
+    pitfall: '多数纠结不是怕选错，是没把「不动」当成一个有代价的选项来评估。',
+    example: '「要不要换工作」→ 不动的代价也要写：三个月后大概率还是同样的困扰。',
+    questions: [
+      '我在纠结的到底是哪两个（或三个）选项？',
+      '每个选项最坏会怎样？我扛得住吗？这个决定可逆吗？',
+      '如果我什么都不做，三个月后会是什么样？'
+    ],
+    signals: ['要不要', '该不该', '选择', '纠结', '犹豫', '选哪个', '换工作', '买房', '要不要做']
+  },
+  {
+    id: 'oppcost',
+    name: '机会成本',
+    emoji: '🪙',
+    category: 'decide',
+    scene: ['work', 'daily'],
+    oneLiner: '选了 A，就自动放弃了「用同样时间精力能做的 B」。算这笔账。',
+    when: '当你「都想要」「舍不得放弃」「时间精力不够分」「两难」时。',
+    how: '任何选择都问：为了这事，我放弃了什么别的同样有价值的事？如果换那个被放弃的，会不会更好？决策的核心不是「这个好不好」，而是「它是不是当前最好的那个」。',
+    pitfall: '只看「做了能得到什么」，忘了「为此放弃的」。免费的时间也有成本。',
+    example: '周末加班多赚 500，成本是陪家人的半天和休息——这笔账算下来可能不划算。',
+    questions: [
+      '选了这件事，我实际放弃了哪件同样值得做的事？',
+      '如果把同样的时间精力投到那件被放弃的事上，会更好吗？',
+      '我「舍不得」的，到底是真价值，还是只是沉没的投入？'
+    ],
+    signals: ['同时', '都想要', '舍不得', '放弃', '时间不够', '精力', '分身', '两难', '兼顾']
+  },
+  {
+    id: 'sunk',
+    name: '沉没成本',
+    emoji: '🕳️',
+    category: 'decide',
+    scene: ['work', 'daily'],
+    oneLiner: '已经花掉、收不回的，不该影响下一步。看未来，不看过去。',
+    when: '当你说「都已经……了」「不甘心」「不想白费」「之前投入那么多」时。',
+    how: '把「已经花掉的」和「未来还要花的」分开。问自己：如果现在从头来，仅看未来，我还会选这条路吗？如果不会，过去的花销就是沉没成本，止损比硬撑更理性。',
+    pitfall: '「都做了这么久，现在放弃太亏」——亏的已经发生，继续只会更亏。',
+    example: '一部难看的电已经看了半小时，继续看只是为了「不浪费票钱」，但浪费的是接下来两小时。',
+    questions: [
+      '我已经花掉、收不回的有什么？把它单独列出来。',
+      '如果现在从零开始、只看未来，我还会选这个吗？',
+      '继续下去，未来还要再投入什么？值不值？'
+    ],
+    signals: ['已经', '都花了', '投入了', '不想浪费', '不甘心', '都做了', '白费', '之前投入']
+  },
+  {
+    id: 'second',
+    name: '二阶思维',
+    emoji: '🔮',
+    category: 'decide',
+    scene: ['work', 'daily'],
+    oneLiner: '别只看直接后果，再想「后果之后果」。人和人差在这一层。',
+    when: '当你评估一个决定「之后会怎样」「长远看」「如果大家都……」时。',
+    how: '对每个决定问两层：第一层，直接结果是什么？第二层，别人会怎么反应、引发什么连锁、半年后回看呢？很多好主意死在「然后呢」这一问上。',
+    pitfall: '只想到 firsthand 好处就行动，没想对手/市场/他人会怎么调整应对。',
+    example: '降价促销（直接：多卖）→ 对手也降（二阶：利润一起崩）。好决定要经得起二阶推演。',
+    questions: [
+      '这个决定的直接结果是什么？',
+      '别人/市场会怎么反应？引发什么连锁？',
+      '半年后回看，我会庆幸还是后悔？凭什么？'
+    ],
+    signals: ['之后', '后果', '长远', '以后', '将来', '下一步', '如果大家都', '后续', '连锁', '将来']
+  },
+
+  /* ---------- 校准判断 ---------- */
+  {
+    id: 'counter',
+    name: '反证法',
+    emoji: '🛡️',
+    category: 'calib',
+    scene: ['work', 'reading'],
+    oneLiner: '主动去推翻自己，比再想十个理由更能接近真相。',
+    when: '当你很确定「肯定」「一定」「我没错」时——越笃定越该用。',
+    how: '把你最相信的那个结论一句话写出来。然后认真问：如果我错了，最可能错在哪一步？有什么具体证据能推翻它？我有没有真的去找过反例？',
+    pitfall: '默认模式是收集支持自己的证据。写不出反证，通常不是因为不存在，而是因为没找。',
+    example: '「这个方案没人会用」→ 反证：上周有两个同事主动问过进度，说明需求至少存在。',
+    questions: [
+      '我现在最相信的那个结论，一句话写出来。',
+      '如果我错了，最可能错在哪一步？',
+      '有什么具体证据能推翻它？我有没有真的去找过？'
+    ],
+    signals: ['肯定', '一定', '没错', '我是对的', '百分百', '确定', '必然', '绝对']
+  },
+  {
+    id: 'assumewrong',
+    name: '先假设自己错了',
+    emoji: '🤔',
+    category: 'calib',
+    scene: ['work', 'daily', 'reading'],
+    oneLiner: '在反驳别人前，先认真想「万一是我想错了呢」。',
+    when: '当你觉得「也许是我」「是不是我想多了」「可能有偏见」「对方怎么会这样想」时。',
+    how: '强制自己花两分钟，认真构造一个「我错了」的版本：在什么情况下我的判断不成立？我的信息来源有没有盲区？这能让你从防御状态切到学习状态。',
+    pitfall: '把假设自己错，变成自我否定。它只是个思维练习，不是定罪。',
+    example: '「他没回消息是故意冷落我」→ 假设我错：他可能在开会。两种都先列出来再判断。',
+    questions: [
+      '认真构造一个「我错了」的版本：在什么情况下我的判断不成立？',
+      '我的信息来自哪？有没有我根本没看到的角度？',
+      '如果对方是对的，最合理的解释是什么？'
+    ],
+    signals: ['万一', '也许我', '可能我', '是不是我想', '偏见', '主观', '我没错', '想多了']
+  },
+  {
+    id: 'occam',
+    name: '奥卡姆剃刀',
+    emoji: '🪒',
+    category: 'calib',
+    scene: ['daily', 'work'],
+    oneLiner: '解释越少、越平常的那个，通常越接近真相。别急着脑补阴谋。',
+    when: '当你怀疑「他故意的」「背后有人」「是不是在算计我」时。',
+    how: '对一件事列出所有可能的解释，从「最简单平常」到「最复杂离奇」排个序。默认选最简单那个，除非有证据支持更复杂的。脑补的剧情往往最精彩也最不准。',
+    pitfall: '越焦虑越爱编复杂剧本。「他针对我」比「他今天太忙」更有戏剧性，但往往更假。',
+    example: '同事没打招呼——最省力的解释是「没看见」，不是「蓄意排挤」。除非有连续证据。',
+    questions: [
+      '对这件事，最省力的解释是什么？',
+      '最复杂离奇的解释又是什么？',
+      '我有什么证据，能排除那个简单的解释吗？'
+    ],
+    signals: ['故意', '针对', '背后', '算计', '阴谋', '是不是有人', '使坏', '针对我']
+  },
+  {
+    id: 'asym',
+    name: '收益风险不对称',
+    emoji: '📐',
+    category: 'calib',
+    scene: ['work', 'daily'],
+    oneLiner: '看上行和下行是不是对称。下行扛不住的，再诱人也要让。',
+    when: '当你想「搏一把」「赌」「怕亏」「求稳妥」「all in / 押注」时。',
+    how: '每个选择都画两笔：最好的结果我能得到多少？最坏的结果我会失去多少？如果下行是我扛不住的（亏不起），哪怕上行很诱人，也要放弃或大幅减小仓位。',
+    pitfall: '只看「赢了多爽」，不看「输了会不会出局」。出局一次，前面全白干。',
+    example: 'All in 一个项目赚 3 倍，但输了就负债——下行不可逆，这不叫投资叫赌博。',
+    questions: [
+      '这个选择最好的结果是什么？我能得到多少？',
+      '最坏的结果是什么？我扛得住吗？可逆吗？',
+      '上行和下行对称吗？如果输了会出局吗？'
+    ],
+    signals: ['高风险', '赌', '搏', '万一', '稳妥', '安全', '怕亏', '亏不起', 'all in', '押注']
+  },
+  {
+    id: 'omission',
+    name: '我漏看了什么',
+    emoji: '👁️',
+    category: 'calib',
+    scene: ['work', 'reading'],
+    oneLiner: '结论的可靠度，取决于你没看的东西，而不只是你看到的。',
+    when: '当你说「我判断应该没错」「凭……」「依据是」却说不全时。',
+    how: '列出你得出这个结论用了哪些信息。再逼问：我故意或无意略过了什么？当时为什么略过？补上哪一条，最可能改变我的结论？',
+    pitfall: '人评估自己的判断时，只看已经掌握的材料，容易高估把握。',
+    example: '「数据说明用户不喜欢」→ 省略了「只统计了流失用户，没看留下来的人」。',
+    questions: [
+      '我得出这个结论，用了哪些信息？列出来。',
+      '我省略了、没查的是什么？当时为什么省略？',
+      '补上哪一条，最可能改变我的结论？'
+    ],
+    signals: ['结论', '判断', '应该没错', '相信', '确定', '凭', '依据', '证据', '我觉得对']
+  },
+
+  /* ---------- 换角度看 ---------- */
+  {
+    id: 'perspective',
+    name: '换三个人眼睛',
+    emoji: '👥',
+    category: 'view',
+    scene: ['daily', 'reading'],
+    oneLiner: '不是假装同意，是借别人的眼睛，找到你漏掉的信息。',
+    when: '当你和别人「冲突」「吵架」「他怎么就不理解我」「误会」时。',
+    how: '找三个视角：一个立场相反的人会怎么描述这事？一个完全外行会问什么傻问题？十年后的你会觉得哪部分其实不重要？重点是写出他们看得见、而你看不见的具体东西。',
+    pitfall: '换视角常写成「对方也有道理」这种和稀泥。要写出他具体的、不同的信息点。',
+    example: '反方会说「你只算了成本，没算交接期内别人替你扛的活」。',
+    questions: [
+      '一个跟我立场相反的人，会怎么描述这件事？',
+      '一个完全不懂这行的朋友，会问什么傻问题？',
+      '十年后回看，我会觉得哪部分其实不重要？'
+    ],
+    signals: ['别人', '他们', '冲突', '吵架', '不同意', '反对', '不理解我', '误会', '对方']
   },
   {
     id: 'timescale',
-    title: '拉到三个时间尺度',
+    name: '拉长时间尺度',
+    emoji: '⏳',
+    category: 'view',
     scene: ['daily', 'work'],
-    hint: '多数反复想的事，尺度比想象中短',
+    oneLiner: '多数反复想的事，重要程度只有你以为的 1/10。拉远看就松了。',
+    when: '当你「很在意」「焦虑」「忍不住」「放不下」「为小事较真」时。',
+    how: '把这件事放到三个尺度：10 分钟后还重要吗？10 天后呢？10 个月后呢？再看你现在的注意力投入，和真实尺度匹不匹配。不匹配就把注意力挪走。',
+    pitfall: '不是叫你别在意，而是先看清楚这份在意有没有被放大。',
+    example: '一条已读不回的消息：10 分钟很重，10 个月基本不存在。',
     questions: [
       '这件事 10 分钟后还重要吗？10 天后呢？10 个月后呢？',
       '我现在投入的注意力，和它的真实尺度匹配吗？',
       '如果不匹配，我把注意力挪到哪一件更值得的事上？'
     ],
-    pitfall: '不是叫你别在意，而是先看清楚这份在意有没有被放大。',
-    example: '一条已读不回的消息：10 分钟很重，10 个月基本不存在。'
+    signals: ['重要', '在意', '焦虑', '忍不住', '放不下', '小事', '纠结', '较真', '耿耿于怀']
   },
   {
-    id: 'analogy',
-    title: '类比，然后找不同',
+    id: 'feynman',
+    name: '费曼讲清楚',
+    emoji: '🗣️',
+    category: 'view',
     scene: ['reading', 'work'],
-    hint: '类比帮你起步，差异才决定能不能照搬',
+    oneLiner: '讲不顺的地方，就是没想懂的地方。卡住 = 漏洞。',
+    when: '当你「没懂」「说不清」「搞不懂原理」「都是术语」时。',
+    how: '用大白话把这件事讲给一个完全外行听，直接写下来。哪一步你卡住了、只能蹦术语糊过去，哪里就是你没真懂、需要补信息的点。针对卡点去查，而不是怪自己表达差。',
+    pitfall: '把讲不清楚归因为「我表达不行」，会刚好错过真正没搞懂的那一块。',
+    example: '「这个模型会做归因」→ 讲不下去 → 缺的是「它凭什么判断哪个渠道算贡献」。',
     questions: [
-      '这跟我熟悉的哪件事结构相像？像在哪？',
-      '两者最关键的不同点是什么？',
-      '因为那个不同点，我绝对不能照搬什么？'
+      '用大白话把它讲给一个不懂的人听，直接写下来。',
+      '哪一步你卡住了，或者只能用术语糊过去？',
+      '针对卡住的那一步，我到底缺的是什么信息？'
     ],
-    pitfall: '相似处最容易看见，也最容易骗人；真正决定成败的往往是那个被忽略的差异。',
-    example: '「做公众号像开店」像在都要客流，但内容不能像货架一样随时换品类。'
+    signals: ['没懂', '说不清', '概念', '原理', '搞不懂', '怎么理解', '到底是什么', '术语', '理解']
+  },
+
+  /* ---------- 情绪与需求 ---------- */
+  {
+    id: 'emotion',
+    name: '情绪在说什么需求',
+    emoji: '💗',
+    category: 'feel',
+    scene: ['daily'],
+    oneLiner: '情绪有信息量，但它不给事实。先听懂它要什么。',
+    when: '当你「烦」「生气」「难受」「委屈」「火大」却说不清为啥时。',
+    how: '先给情绪命名（别只写「烦」，是委屈？是被忽视？是失控感？）。再找触发它的具体瞬间，然后问：我真正想要、却没得到的是什么？能不能直接说出口？',
+    pitfall: '把情绪当成对事实的判断，会把「我需要被事先告知」误读成「他不尊重我」。',
+    example: '「被临时改需求很火」→ 真正想要的是「提前知道，好安排自己的节奏」。',
+    questions: [
+      '我现在具体的感受是什么？别只写「烦」。',
+      '触发它的具体瞬间是哪一刻？当时发生了什么？',
+      '我真正想要但没得到的是什么？我能直接说出口吗？'
+    ],
+    signals: ['烦', '生气', '难受', '委屈', '不爽', '焦虑', '火大', '郁闷', '不开心', '委屈']
   }
 ];
 
 const SCENE_LABEL = { daily: '日常', work: '工作', reading: '阅读' };
 
+/* ============================================================
+ * 匹配器：用户输入一句话，挑出最该用的 2-3 个思维方式
+ * 返回 [{ method, hits:[命中的信号词] }]，按命中数排序
+ * ============================================================ */
+function matchMethods(text) {
+  const t = (text || '').toLowerCase();
+  const scored = [];
+  METHODS.forEach(m => {
+    const hits = [];
+    (m.signals || []).forEach(s => {
+      if (t.indexOf(s.toLowerCase()) >= 0) hits.push(s);
+    });
+    if (hits.length) scored.push({ method: m, hits: hits });
+  });
+  scored.sort((a, b) => b.hits.length - a.hits.length);
+  let top = scored.slice(0, 3);
+  if (!top.length) {
+    // 没命中任何信号：给一组通用打底方法，并标注「建议」
+    return {
+      default: true,
+      list: ['fact', 'counter', 'why'].map(id => ({ method: METHODS.find(x => x.id === id), hits: [] }))
+    };
+  }
+  return { default: false, list: top };
+}
+
+/* ============================================================
+ * 挑刺（保留原有三层能力）
+ * ============================================================ */
 const CRITIQUE_SYSTEM = '你是一个严格的思考教练，说话直接、不客套。';
 
 const CRITIQUE_RULES = '规则（必须遵守）：\n1. 不要给答案，不要替他分析这件事本身，不要下结论，不要安慰或夸奖。\n2. 只做一件事：指出这三条思考里具体的漏洞、跳步、含糊处，每条配一个能逼他继续想下去的问题。\n3. 最多 4 条，每条不超过 45 字，直接、具体、不要套话。\n4. 如果他写得确实扎实，只指出还差的那个角度，不要凑数。\n5. 用中文，纯文本，每行一条，行首用「· 」。';
@@ -415,6 +694,7 @@ const LOCAL_RULES = [
 /* ---------- 存储 ---------- */
 const DB_KEY = 'think3.v1';
 let state = load();
+let openKnow = {}; // 知识库展开状态（不持久化）
 
 function load() {
   try {
@@ -463,21 +743,22 @@ function toast(msg) {
   clearTimeout(toast._t);
   toast._t = setTimeout(() => t.classList.remove('show'), 1900);
 }
-function pickCard(scene) {
-  let pool = CARDS;
-  if (scene) pool = CARDS.filter(c => c.scene.indexOf(scene) >= 0);
-  if (!pool.length) pool = CARDS;
-  const last = state.draft ? state.draft.cardId : null;
+function pickMethod(scene) {
+  let pool = METHODS;
+  if (scene) pool = METHODS.filter(c => c.scene.indexOf(scene) >= 0);
+  if (!pool.length) pool = METHODS;
+  const last = state.draft ? state.draft.methodId : null;
   let c = pool[Math.floor(Math.random() * pool.length)];
   if (pool.length > 1 && c.id === last) c = pool[(pool.indexOf(c) + 1) % pool.length];
   return c;
 }
+function methodById(id) { return METHODS.find(m => m.id === id); }
 
 /* ---------- 路由 ---------- */
 let curTab = 'today';
 function parseHash() {
   const h = (location.hash || '').replace('#', '');
-  if (['today', 'library', 'review', 'me'].indexOf(h) >= 0) curTab = h;
+  if (['today', 'library', 'review', 'me', 'knowledge'].indexOf(h) >= 0) curTab = h;
 }
 function go(tab) {
   curTab = tab;
@@ -492,6 +773,7 @@ function render() {
   if (curTab === 'today') v.innerHTML = renderToday();
   else if (curTab === 'library') v.innerHTML = renderLibrary();
   else if (curTab === 'review') v.innerHTML = renderReview();
+  else if (curTab === 'knowledge') v.innerHTML = renderKnowledge();
   else v.innerHTML = renderMe();
   renderTabbar();
   bind();
@@ -517,43 +799,69 @@ function renderToday() {
     const topic = d ? esc(d.topic) : '';
     h += '<div class="card">' +
       '<h2>现在脑子里在想什么？</h2>' +
-      '<div class="muted" style="margin-bottom:10px">可以是一句困扰、一个决定、刚看到的一句话，或一件让你不爽的事。不用想清楚，先丢进来。</div>' +
+      '<div class="muted" style="margin-bottom:10px">把困扰、纠结、一个决定、刚看到的一句话，或一件不爽的事丢进来。不用想清楚，先写一句。</div>' +
       '<textarea data-topic placeholder="比如：同事改了我方案没打招呼，我很烦">' + topic + '</textarea>' +
-      '<div class="field-label">顺手选个场景（不选就全随机）</div>' +
+      '<div class="field-label">顺手选个场景（不选就全库匹配）</div>' +
       sceneChips(scene) +
-      '<div class="btn-row"><button class="btn btn-primary" data-act="draw">抽一张思维卡</button></div>' +
+      '<div class="btn-row"><button class="btn btn-primary" data-act="match">帮我匹配思考方式</button></div>' +
+      '<div class="btn-row"><button class="btn btn-line btn-sm" data-act="random">随便练一张</button></div>' +
       '</div>';
     return h;
   }
-  if (d.step === 'write') {
-    const card = CARDS.find(c => c.id === d.cardId);
+  if (d.step === 'match') {
+    const topic = d.topic || '';
+    const res = matchMethods(topic);
     h += '<div class="card">' +
-      '<div class="tag">' + card.scene.map(s => SCENE_LABEL[s]).join('</div><div class="tag">') + '</div>' +
-      '<h2 style="margin-top:6px">' + esc(card.title) + '</h2>' +
-      '<div class="muted" style="margin-bottom:6px">' + esc(card.hint) + '</div>';
-    card.questions.forEach((q, i) => {
+      '<h2>为你匹配的思考方式</h2>' +
+      '<div class="muted" style="margin-bottom:12px">' +
+      (res.default ? '没匹配到明显信号，先用这组「打底三件套」练手：先分清事实、再找反证、最后追根因。' : '根据你说的「' + esc(topic) + '」，这几个方式最该用上。点一个，照它的步骤想想。') +
+      '</div>';
+    res.list.forEach(it => {
+      const m = it.method;
+      const hits = it.hits.length ? '<div class="muted" style="margin-top:6px">匹配到你说的：' +
+        it.hits.slice(0, 4).map(s => '<span class="chip">' + esc(s) + '</span>').join('') + '</div>' : '';
+      h += '<div class="match-card">' +
+        '<div class="mc-head"><span class="mc-emoji">' + m.emoji + '</span>' +
+        '<div><div class="mc-name">' + esc(m.name) + '</div><div class="mc-one">' + esc(m.oneLiner) + '</div></div></div>' +
+        hits +
+        '<div class="btn-row"><button class="btn btn-primary btn-sm" data-act="usemethod" data-id="' + m.id + '">用这个方法想想</button></div>' +
+        '</div>';
+    });
+    h += '<div class="btn-row"><button class="btn btn-line btn-sm" data-act="backinput">重新输入</button>' +
+      '<button class="btn btn-line btn-sm" data-act="random">随便练一张</button></div>';
+    return h;
+  }
+  if (d.step === 'write') {
+    const m = methodById(d.methodId);
+    const topic = d.topic || '';
+    h += '<div class="card">' +
+      '<div class="tag">' + esc(m.name) + '</div>' +
+      '<div class="muted" style="margin:6px 0 10px">' + esc(m.hint || m.oneLiner) + '</div>';
+    h += '<div class="field-label">你正在想的事（选填）</div>' +
+      '<textarea data-topic2 placeholder="一句话描述，或留空直接回答下面的问题">' + esc(topic) + '</textarea>';
+    m.questions.forEach((q, i) => {
       h += '<div class="q-block"><div class="qn"><span class="num">' + (i + 1) + '.</span>' + esc(q) + '</div>' +
         '<textarea data-a="' + i + '" placeholder="写下你的回答（这一行至少写 4 个字）">' + esc(d.answers[i] || '') + '</textarea></div>';
     });
     h += '<div class="btn-row">' +
-      '<button class="btn btn-line btn-sm" data-act="redraw">换一张</button>' +
+      '<button class="btn btn-line btn-sm" data-act="redraw">换一个方法</button>' +
       '<button class="btn btn-primary" data-act="unlock">写完三行，解锁对照</button>' +
       '</div></div>';
     return h;
   }
   // reveal
-  const card = CARDS.find(c => c.id === d.cardId);
+  const m = methodById(d.methodId);
   h += '<div class="card">' +
-    '<div class="tag">' + card.scene.map(s => SCENE_LABEL[s]).join('</div><div class="tag">') + '</div>' +
-    '<h2 style="margin-top:6px">' + esc(card.title) + '</h2>';
-  card.questions.forEach((q, i) => {
+    '<div class="tag">' + esc(m.name) + '</div>' +
+    (d.topic ? '<h2 style="margin-top:6px">' + esc(d.topic) + '</h2>' : '');
+  m.questions.forEach((q, i) => {
     h += '<div class="detail-q"><div class="qn">' + (i + 1) + '. ' + esc(q) + '</div><div class="qa">' + esc(d.answers[i]) + '</div></div>';
   });
-  h += '<div class="pitfall"><span class="lbl">常见盲区</span>' + esc(card.pitfall) + '</div>' +
-    '<div class="pitfall" style="background:#F3F6EF">' + esc(card.example) + '</div>';
+  h += '<div class="pitfall"><span class="lbl">常见盲区</span>' + esc(m.pitfall) + '</div>' +
+    '<div class="pitfall" style="background:#F3F6EF"><span class="lbl" style="color:var(--ok)">一个例子</span>' + esc(m.example) + '</div>';
   h += renderCritique(d);
   h += '<div class="btn-row">' +
-    '<button class="btn btn-line btn-sm" data-act="redraw">换一张重想</button>' +
+    '<button class="btn btn-line btn-sm" data-act="redraw">换方法重想</button>' +
     '<button class="btn btn-primary" data-act="save">存进思考库</button>' +
     '</div></div>';
   return h;
@@ -561,7 +869,7 @@ function renderToday() {
 
 function sceneChips(sel) {
   const arr = ['daily', 'work', 'reading'];
-  let h = '<div style="display:flex;gap:8px;margin-bottom:12px">';
+  let h = '<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">';
   h += '<div class="tag ' + (sel === '' ? 'on' : '') + '" data-scene="" style="' + (sel === '' ? 'background:var(--accent);color:#fff' : '') + '">全部</div>';
   arr.forEach(s => {
     const on = sel === s;
@@ -594,10 +902,40 @@ function localCritiqueHTML(d) {
   return hits.slice(0, 4).map(x => '<span class="ci">· ' + esc(x) + '</span>').join('');
 }
 function buildPrompt(d) {
-  const card = CARDS.find(c => c.id === d.cardId);
-  return '【思考教练挑刺任务】\n问题：' + d.topic + '\n思维卡：' + card.title + '\n他的三条思考：\n1) ' +
+  const m = methodById(d.methodId);
+  return '【思考教练挑刺任务】\n问题：' + (d.topic || '（未填主题）') + '\n思维方式：' + m.name + '\n他的三条思考：\n1) ' +
     (d.answers[0] || '') + '\n2) ' + (d.answers[1] || '') + '\n3) ' + (d.answers[2] || '') +
     '\n\n' + CRITIQUE_RULES;
+}
+
+/* ---------- 知识库（思维方式浏览） ---------- */
+function renderKnowledge() {
+  let h = '<div class="page" style="padding:18px">';
+  h += '<div class="muted" style="margin-bottom:14px">这里收着 ' + METHODS.length + ' 个思维方式。点开一个看看「什么时候用、怎么用、容易踩的坑」。下次遇事，你会慢慢认出该用哪一个。</div>';
+  CATEGORIES.forEach(cat => {
+    const list = METHODS.filter(m => m.category === cat.id);
+    if (!list.length) return;
+    h += '<div class="cat-label">' + esc(cat.label) + '</div>';
+    list.forEach(m => {
+      const open = openKnow[m.id];
+      h += '<div class="kcard" data-act="knowtoggle" data-id="' + m.id + '">' +
+        '<div class="kcard-head"><span class="k-emoji">' + m.emoji + '</span>' +
+        '<span class="k-name">' + esc(m.name) + '</span><span class="k-arrow">' + (open ? '收起' : '展开') + '</span></div>';
+      if (open) {
+        h += '<div class="k-body">' +
+          '<div class="k-row"><span class="k-k">一句话</span>' + esc(m.oneLiner) + '</div>' +
+          '<div class="k-row"><span class="k-k">什么时候用</span>' + esc(m.when) + '</div>' +
+          '<div class="k-row"><span class="k-k">怎么用</span>' + esc(m.how) + '</div>' +
+          '<div class="k-row"><span class="k-k">常见误区</span>' + esc(m.pitfall) + '</div>' +
+          '<div class="k-row"><span class="k-k">例子</span>' + esc(m.example) + '</div>' +
+          '<div class="btn-row"><button class="btn btn-primary btn-sm" data-act="knowuse" data-id="' + m.id + '">用这个方法想想</button></div>' +
+          '</div>';
+      }
+      h += '</div>';
+    });
+  });
+  h += '</div>';
+  return h;
 }
 
 /* ---------- 思考库 ---------- */
@@ -611,15 +949,15 @@ function renderLibrary() {
   const q = (state._q || '').toLowerCase();
   const list = state.entries.slice().sort((a, b) => b.createdAt - a.createdAt).filter(e => {
     if (!q) return true;
-    const s = (e.topic + ' ' + e.answers.map(a => a.a).join(' ') + ' ' + e.cardTitle).toLowerCase();
+    const s = (e.topic + ' ' + e.answers.map(a => a.a).join(' ') + ' ' + e.methodTitle).toLowerCase();
     return s.indexOf(q) >= 0;
   });
   if (!list.length) h += '<div class="empty">没找到匹配的。</div>';
   list.forEach(e => {
     const preview = e.answers.map(a => a.a).join(' ');
     h += '<div class="entry" data-act="open" data-id="' + e.id + '">' +
-      '<div class="t">' + esc(e.topic) + '</div>' +
-      '<div class="meta">' + fmtDate(e.createdAt) + ' · ' + esc(e.cardTitle) +
+      '<div class="t">' + esc(e.topic || '(未填主题)') + '</div>' +
+      '<div class="meta">' + fmtDate(e.createdAt) + ' · ' + esc(e.methodTitle) +
       (e.review ? ' · 已回看' : (e.reviewAt <= Date.now() ? ' · <span style="color:var(--danger)">该回看了</span>' : '')) + '</div>' +
       '<div class="preview">' + esc(preview) + '</div></div>';
   });
@@ -637,8 +975,8 @@ function renderReview() {
   }
   due.forEach(e => {
     h += '<div class="entry" data-act="revopen" data-id="' + e.id + '">' +
-      '<div class="t">' + esc(e.topic) + '</div>' +
-      '<div class="meta">' + fmtDate(e.createdAt) + ' · ' + esc(e.cardTitle) + ' · 拖了 ' +
+      '<div class="t">' + esc(e.topic || '(未填主题)') + '</div>' +
+      '<div class="meta">' + fmtDate(e.createdAt) + ' · ' + esc(e.methodTitle) + ' · 拖了 ' +
       Math.max(0, Math.round((Date.now() - e.reviewAt) / 86400000)) + ' 天</div></div>';
   });
   return h + '</div>';
@@ -648,26 +986,25 @@ function renderReview() {
 function renderMe() {
   const s = state.settings;
   const total = state.entries.length;
-  const covered = new Set(state.entries.map(e => e.cardId)).size;
+  const covered = new Set(state.entries.map(e => e.methodId)).size;
   const reviewed = state.entries.filter(e => e.review);
   const hit = reviewed.filter(e => e.review.verdict === 'hit').length;
   const miss = reviewed.filter(e => e.review.verdict === 'miss').length;
   const rate = (hit + miss) ? Math.round(hit / (hit + miss) * 100) : null;
-  // 常踩坑 top3
-  const missByCard = {};
-  state.entries.forEach(e => { if (e.review && e.review.verdict === 'miss') missByCard[e.cardId] = (missByCard[e.cardId] || 0) + 1; });
-  const top = Object.keys(missByCard).map(id => ({ t: (CARDS.find(c => c.id === id) || {}).title, n: missByCard[id] }))
+  const missByMethod = {};
+  state.entries.forEach(e => { if (e.review && e.review.verdict === 'miss') missByMethod[e.methodId] = (missByMethod[e.methodId] || 0) + 1; });
+  const top = Object.keys(missByMethod).map(id => ({ t: (methodById(id) || {}).name, n: missByMethod[id] }))
     .sort((a, b) => b.n - a.n).slice(0, 3);
 
   let h = '<div class="page" style="padding:18px">';
   h += '<div class="card"><h2>你的数据</h2><div class="stat-grid">' +
     '<div class="stat"><div class="v">' + total + '</div><div class="k">思考次数</div></div>' +
-    '<div class="stat"><div class="v">' + covered + '</div><div class="k">用过的卡片</div></div>' +
+    '<div class="stat"><div class="v">' + covered + '</div><div class="k">用过的思考方式</div></div>' +
     '<div class="stat"><div class="v">' + reviewed.length + '</div><div class="k">已回看</div></div>' +
     '<div class="stat"><div class="v">' + (rate == null ? '—' : rate + '%') + '</div><div class="k">判断印证率</div></div>' +
     '</div>';
   if (top.length) {
-    h += '<div class="muted" style="margin-top:12px">最常打脸的卡片：' + top.map(x => esc(x.t) + '×' + x.n).join('、') + '</div>';
+    h += '<div class="muted" style="margin-top:12px">最常打脸的方式：' + top.map(x => esc(x.t) + '×' + x.n).join('、') + '</div>';
   }
   h += '</div>';
 
@@ -697,13 +1034,13 @@ function renderMe() {
 
 /* ---------- 详情 / 回看编辑 ---------- */
 function detailHTML(e, mode) {
+  const m = methodById(e.methodId);
   let h = '<div class="page" style="padding:18px">';
-  h += '<div class="card"><div class="tag">' + e.cardTitle + '</div>' +
-    '<h2 style="margin-top:6px">' + esc(e.topic) + '</h2>' +
+  h += '<div class="card"><div class="tag">' + esc(m.name) + '</div>' +
+    '<h2 style="margin-top:6px">' + esc(e.topic || '(未填主题)') + '</h2>' +
     '<div class="meta">' + fmtDate(e.createdAt) + '</div>';
   e.answers.forEach((a, i) => {
-    const card = CARDS.find(c => c.id === e.cardId);
-    h += '<div class="detail-q"><div class="qn">' + (i + 1) + '. ' + esc(card.questions[i]) + '</div><div class="qa">' + esc(a.a) + '</div></div>';
+    h += '<div class="detail-q"><div class="qn">' + (i + 1) + '. ' + esc(m.questions[i]) + '</div><div class="qa">' + esc(a.a) + '</div></div>';
   });
   h += '</div>';
   if (e.critique) {
@@ -733,6 +1070,7 @@ function renderTabbar() {
   const due = state.entries.filter(e => !e.review && e.reviewAt <= Date.now()).length;
   const tabs = [
     { id: 'today', label: '今天', icon: 'M12 3a9 9 0 100 18 9 9 0 000-18zm0 4v5l3 2' },
+    { id: 'knowledge', label: '知识库', icon: 'M4 19A2 2 0 016 21h12a2 2 0 002-2V7l-8-4-8 4zm0 0V9m4 0v10m4-10v10m4-10v10' },
     { id: 'library', label: '思考库', icon: 'M4 5h16M4 10h16M4 15h16M4 20h16' },
     { id: 'review', label: '回看', icon: 'M3 12a9 9 0 109-9 9 9 0 00-7 3.5M3 4v3.5h3.5' },
     { id: 'me', label: '我的', icon: 'M12 12a4 4 0 100-8 4 4 0 000 8zm-7 8a7 7 0 0114 0' }
@@ -757,21 +1095,21 @@ function bind() {
   document.getElementById('tabbar').querySelectorAll('[data-act="go"]').forEach(el => {
     el.addEventListener('click', () => go(el.getAttribute('data-tab')));
   });
-  // 文本输入不触发重绘（避免丢焦点），只写回 state
   v.querySelectorAll('[data-a]').forEach(el => {
     el.addEventListener('input', () => { state.draft.answers[+el.getAttribute('data-a')] = el.value; });
   });
   const topic = v.querySelector('[data-topic]');
-  if (topic) topic.addEventListener('input', () => { if (state.draft) state.draft.topic = topic.value; else { state.draft = { topic: topic.value, scene: '', cardId: null, answers: ['', '', ''], step: 'input' }; } });
+  if (topic) topic.addEventListener('input', () => { if (state.draft) state.draft.topic = topic.value; else { state.draft = { topic: topic.value, scene: '', methodId: null, answers: ['', '', ''], step: 'input' }; } });
+  const topic2 = v.querySelector('[data-topic2]');
+  if (topic2) topic2.addEventListener('input', () => { if (state.draft) state.draft.topic = topic2.value; });
   v.querySelectorAll('[data-scene]').forEach(el => {
-    el.addEventListener('click', () => { const sc = el.getAttribute('data-scene'); if (state.draft) state.draft.scene = sc; else state.draft = { topic: '', scene: sc, cardId: null, answers: ['', '', ''], step: 'input' }; render(); });
+    el.addEventListener('click', () => { const sc = el.getAttribute('data-scene'); if (state.draft) state.draft.scene = sc; else state.draft = { topic: '', scene: sc, methodId: null, answers: ['', '', ''], step: 'input' }; render(); });
   });
   const search = v.querySelector('[data-search]');
   if (search) search.addEventListener('input', () => { state._q = search.value; const list = document.getElementById('libList'); if (list) list.outerHTML = libListInner(search.value); bind(); });
   v.querySelectorAll('[data-ctab]').forEach(el => {
     el.addEventListener('click', () => switchCritTab(el.getAttribute('data-ctab')));
   });
-  // 设置
   v.querySelectorAll('[data-toggle]').forEach(el => {
     el.addEventListener('click', () => { const k = el.getAttribute('data-toggle'); state.settings[k] = !state.settings[k]; render(); });
   });
@@ -789,12 +1127,12 @@ function libListInner(q) {
   q = (q || '').toLowerCase();
   const list = state.entries.slice().sort((a, b) => b.createdAt - a.createdAt).filter(e => {
     if (!q) return true;
-    return (e.topic + ' ' + e.answers.map(a => a.a).join(' ') + ' ' + e.cardTitle).toLowerCase().indexOf(q) >= 0;
+    return (e.topic + ' ' + e.answers.map(a => a.a).join(' ') + ' ' + e.methodTitle).toLowerCase().indexOf(q) >= 0;
   });
   if (!list.length) return '<div class="empty">没找到匹配的。</div>';
   return list.map(e => '<div class="entry" data-act="open" data-id="' + e.id + '">' +
-    '<div class="t">' + esc(e.topic) + '</div>' +
-    '<div class="meta">' + fmtDate(e.createdAt) + ' · ' + esc(e.cardTitle) +
+    '<div class="t">' + esc(e.topic || '(未填主题)') + '</div>' +
+    '<div class="meta">' + fmtDate(e.createdAt) + ' · ' + esc(e.methodTitle) +
     (e.review ? ' · 已回看' : (e.reviewAt <= Date.now() ? ' · <span style="color:var(--danger)">该回看了</span>' : '')) + '</div>' +
     '<div class="preview">' + esc(e.answers.map(a => a.a).join(' ')) + '</div></div>').join('');
 }
@@ -802,20 +1140,39 @@ function libListInner(q) {
 /* ---------- 行为分发 ---------- */
 function act(a, el) {
   switch (a) {
-    case 'draw': {
+    case 'match': {
       const topic = (document.querySelector('[data-topic]') || {}).value || (state.draft ? state.draft.topic : '');
       if (topic.trim().length < 4) { toast('先写一句话，至少 4 个字'); return; }
       const scene = state.draft ? state.draft.scene : '';
-      const card = pickCard(scene);
-      state.draft = { topic: topic, scene: scene, cardId: card.id, answers: ['', '', ''], step: 'write' };
+      state.draft = { topic: topic, scene: scene, methodId: null, answers: ['', '', ''], step: 'match' };
+      render();
+      break;
+    }
+    case 'backinput': {
+      if (state.draft) state.draft.step = 'input';
+      render();
+      break;
+    }
+    case 'usemethod': {
+      const id = el.getAttribute('data-id');
+      const d = state.draft || { topic: '', scene: '' };
+      state.draft = { topic: d.topic || '', scene: d.scene || '', methodId: id, answers: ['', '', ''], step: 'write' };
+      render();
+      break;
+    }
+    case 'random': {
+      const scene = state.draft ? state.draft.scene : '';
+      const m = pickMethod(scene);
+      const d = state.draft || { topic: '', scene: scene };
+      state.draft = { topic: d.topic || '', scene: scene, methodId: m.id, answers: ['', '', ''], step: 'write' };
       render();
       break;
     }
     case 'redraw': {
       const d = state.draft; if (!d) return;
-      const card = pickCard(d.scene);
-      state.draft = { topic: d.topic, scene: d.scene, cardId: card.id, answers: ['', '', ''], step: 'write' };
-      render();
+      // 回到匹配（若有主题）或随机
+      if (d.topic && d.topic.trim().length >= 4) { d.step = 'match'; d.methodId = null; render(); }
+      else { const m = pickMethod(d.scene); state.draft = { topic: d.topic || '', scene: d.scene || '', methodId: m.id, answers: ['', '', ''], step: 'write' }; render(); }
       break;
     }
     case 'unlock': {
@@ -826,11 +1183,12 @@ function act(a, el) {
     }
     case 'save': {
       const d = state.draft; if (!d) return;
-      const card = CARDS.find(c => c.id === d.cardId);
+      const m = methodById(d.methodId);
+      const topicFinal = (d.topic && d.topic.trim()) ? d.topic.trim() : (d.answers.find(x => x && x.trim()) || '');
       const entry = {
-        id: uid(), createdAt: Date.now(), topic: d.topic, cardId: card.id, cardTitle: card.title,
-        answers: card.questions.map((q, i) => ({ q: q, a: d.answers[i] || '' })),
-        tags: card.scene.slice(), reviewAt: Date.now() + state.settings.reviewDays * 86400000,
+        id: uid(), createdAt: Date.now(), topic: topicFinal, methodId: m.id, methodTitle: m.name,
+        answers: m.questions.map((q, i) => ({ q: q, a: d.answers[i] || '' })),
+        tags: m.scene.slice(), reviewAt: Date.now() + state.settings.reviewDays * 86400000,
         review: null, critique: d.critique || null, critType: d.critType || null
       };
       state.entries.push(entry); state.draft = null; save();
@@ -841,6 +1199,18 @@ function act(a, el) {
     case 'open': showDetail(el.getAttribute('data-id'), 'view'); break;
     case 'revopen': showDetail(el.getAttribute('data-id'), 'review'); break;
     case 'back': go(curTab === 'review' ? 'review' : 'library'); break;
+    case 'knowtoggle': {
+      const id = el.getAttribute('data-id');
+      openKnow[id] = !openKnow[id];
+      renderKnowledgeInto();
+      break;
+    }
+    case 'knowuse': {
+      const id = el.getAttribute('data-id');
+      state.draft = { topic: '', scene: '', methodId: id, answers: ['', '', ''], step: 'write' };
+      go('today');
+      break;
+    }
     case 'revsave': {
       const id = el.getAttribute('data-id'); const v = el.getAttribute('data-v');
       const e = state.entries.find(x => x.id === id); if (!e) return;
@@ -861,6 +1231,14 @@ function act(a, el) {
     case 'clearData': doClear(); break;
     case 'saveSettings': save(); toast('设置已保存'); render(); break;
   }
+}
+
+function renderKnowledgeInto() {
+  const v = document.getElementById('view');
+  const html = renderKnowledge();
+  // 只替换内容，避免重绑出错；直接 innerHTML 后重绑
+  v.innerHTML = html;
+  bind();
 }
 
 function showDetail(id, mode) {
@@ -898,7 +1276,6 @@ function fallbackCopy(text) {
 async function doAICritique() {
   const d = state.draft; if (!d) return;
   if (!state.settings.enableAI || !state.settings.apiKey) { toast('请先在「我的」配置 API'); return; }
-  const card = CARDS.find(c => c.id === d.cardId);
   const userPrompt = buildPrompt(d);
   const btn = document.querySelector('[data-act="crit-ai"]');
   if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> 请求中'; }
@@ -960,9 +1337,9 @@ function doClear() {
 
 /* ---------- 启动 ---------- */
 function seedDemo() {
-  const card = CARDS.find(c => c.id === 'fact');
+  const m = methodById('fact');
   state.draft = {
-    topic: '同事改了我方案没打招呼，我很烦', scene: 'work', cardId: card.id,
+    topic: '同事改了我方案没打招呼，我很烦', scene: 'work', methodId: m.id,
     answers: ['会上他打断我两次', '他肯定是不认可我', '所以我干脆也别管细节了'],
     step: 'reveal', critique: null, critType: null
   };
